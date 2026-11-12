@@ -1,0 +1,2404 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>鲜蔬源 · 蔬菜店铺销售管理系统</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --green:#2e7d32;--green-2:#43a047;--green-soft:#e8f5e9;
+  --bg:#f2f5f7;--card:#fff;--line:#e6ebf0;--txt:#1f2a37;--muted:#8b96a5;
+  --radius:14px;--shadow:0 1px 3px rgba(16,24,40,.06),0 1px 2px rgba(16,24,40,.04);
+}
+
+/* ================= 登录界面 ================= */
+.login-screen{
+  position:fixed;inset:0;z-index:9999;
+  background:linear-gradient(135deg,#194d1e 0%,#2e7d32 48%,#4caf50 100%);
+  display:flex;align-items:center;justify-content:center;padding:20px;
+}
+.login-card{
+  background:#fff;border-radius:20px;padding:40px 36px;width:min(400px,100%);
+  box-shadow:0 30px 80px rgba(0,0,0,.35);text-align:center;
+  animation:loginPop .3s ease;
+}
+@keyframes loginPop{from{transform:translateY(20px) scale(.97);opacity:0}to{transform:none;opacity:1}}
+.login-logo{font-size:56px;line-height:1;margin-bottom:10px}
+.login-card h1{font-size:24px;color:#1f2a37;letter-spacing:2px;margin-bottom:6px}
+.login-card > p{font-size:13px;color:#8b96a5;margin-bottom:28px;letter-spacing:1px}
+.login-field{text-align:left;margin-bottom:16px}
+.login-field label{display:block;font-size:12.5px;color:#8b96a5;margin-bottom:6px}
+.login-field input{
+  width:100%;padding:12px 14px;font-size:14px;border:1px solid #e6ebf0;
+  border-radius:10px;outline:none;transition:.15s;font-family:inherit;color:#1f2a37;
+}
+.login-field input:focus{border-color:#43a047;box-shadow:0 0 0 3px rgba(67,160,71,.15)}
+.login-error{
+  min-height:20px;font-size:12.5px;color:#d32f2f;text-align:left;margin-bottom:12px;
+}
+.login-btn{
+  width:100%;padding:13px;font-size:15px;font-weight:600;color:#fff;
+  background:linear-gradient(135deg,#43a047,#2e7d32);border:none;border-radius:10px;
+  cursor:pointer;font-family:inherit;letter-spacing:4px;transition:.18s;
+  box-shadow:0 6px 18px rgba(46,125,50,.3);
+}
+.login-btn:hover{transform:translateY(-1px);box-shadow:0 8px 22px rgba(46,125,50,.4)}
+.login-btn:active{transform:none}
+.login-hint{
+  margin-top:20px;font-size:12px;color:#8b96a5;
+  background:#f6f9f6;padding:9px;border-radius:8px;line-height:1.6;
+}
+
+/* ================= 主系统 ================= */
+body{font-family:"PingFang SC","Microsoft YaHei",system-ui,-apple-system,sans-serif;
+  background:var(--bg);color:var(--txt);font-size:14px;-webkit-font-smoothing:antialiased}
+
+.app{display:flex;min-height:100vh}
+.sidebar{width:226px;background:linear-gradient(180deg,#194d1e,#2e7d32 60%,#357a38);
+  color:#fff;position:fixed;top:0;bottom:0;left:0;display:flex;flex-direction:column;
+  padding:20px 14px;gap:6px;z-index:50}
+.brand{display:flex;align-items:center;gap:10px;padding:4px 6px 18px}
+.brand .logo{font-size:26px;line-height:1}
+.brand h1{font-size:16px;letter-spacing:1px}
+.brand p{font-size:11px;opacity:.7;margin-top:2px}
+nav{display:flex;flex-direction:column;gap:4px;flex:1}
+.nav-item{display:flex;align-items:center;gap:10px;padding:11px 14px;border-radius:10px;
+  color:rgba(255,255,255,.82);cursor:pointer;font-size:14px;transition:.15s;user-select:none}
+.nav-item:hover{background:rgba(255,255,255,.12);color:#fff}
+.nav-item.active{background:#fff;color:var(--green);font-weight:600;box-shadow:0 2px 10px rgba(0,0,0,.15)}
+.nav-item span{font-size:16px}
+.sidebar-foot{font-size:11px;opacity:.55;text-align:center;padding-top:10px;border-top:1px solid rgba(255,255,255,.15)}
+
+.main{margin-left:226px;flex:1;display:flex;flex-direction:column;min-width:0}
+.topbar{height:64px;background:#fff;border-bottom:1px solid var(--line);display:flex;
+  align-items:center;justify-content:space-between;padding:0 26px;position:sticky;top:0;z-index:40}
+.topbar h2{font-size:17px;font-weight:600}
+.topbar .meta{font-size:12.5px;color:var(--muted);display:flex;gap:16px;align-items:center}
+.user-badge{
+  display:inline-flex;align-items:center;gap:5px;background:var(--green-soft);color:var(--green);
+  padding:4px 12px;border-radius:20px;font-size:12.5px;font-weight:600;
+}
+.topbar .btn-logout{padding:6px 14px;font-size:12.5px}
+
+.content{padding:22px 26px 40px;display:flex;flex-direction:column;gap:18px}
+.page{display:none;flex-direction:column;gap:18px}
+.page.active{display:flex}
+
+/* ============ 卡片 ============ */
+.card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);
+  border:1px solid var(--line);overflow:hidden}
+.card-hd{display:flex;align-items:center;justify-content:space-between;gap:12px;
+  padding:15px 18px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.card-hd h2{font-size:15px;font-weight:600}
+.hd-actions{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+.card-foot{padding:14px 18px;border-top:1px solid var(--line);display:flex;justify-content:flex-end;gap:10px}
+.inline-label{font-size:13px;color:var(--muted);display:flex;align-items:center;gap:6px}
+.hint-mini{font-size:12px;color:var(--muted);font-weight:400}
+
+/* ============ 表单 ============ */
+input,select,textarea{font-family:inherit;font-size:13.5px;color:var(--txt);
+  border:1px solid var(--line);background:#fff;border-radius:9px;padding:8px 11px;outline:none;transition:.15s}
+input:focus,select:focus{border-color:var(--green-2);box-shadow:0 0 0 3px rgba(67,160,71,.12)}
+input:disabled{background:#f4f6f8;color:var(--muted);cursor:not-allowed}
+.search{min-width:170px;background:#f7f9fa}
+.field{display:flex;flex-direction:column;gap:6px}
+.field label{font-size:12.5px;color:var(--muted)}
+.form-inline{display:flex;gap:16px;padding:14px 18px;flex-wrap:wrap;border-bottom:1px solid var(--line)}
+.form-inline .field{min-width:170px;flex:1}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;padding:4px 0}
+.form-grid .full{grid-column:1/-1}
+
+/* ============ 按钮 ============ */
+.btn{border:1px solid var(--line);background:#fff;color:var(--txt);padding:8px 15px;
+  border-radius:9px;cursor:pointer;font-size:13.5px;font-weight:500;font-family:inherit;
+  transition:.15s;white-space:nowrap}
+.btn:hover{background:#f4f7f9;border-color:#d7dfe6}
+.btn.primary{background:var(--green);border-color:var(--green);color:#fff;box-shadow:0 2px 8px rgba(46,125,50,.25)}
+.btn.primary:hover{background:var(--green-2);border-color:var(--green-2)}
+.btn.danger{color:#d32f2f;border-color:#f2cccc}
+.btn.danger:hover{background:#fdf2f2}
+.btn.ghost{background:transparent;border-color:transparent;color:var(--muted)}
+.btn.ghost:hover{background:#f4f7f9;color:var(--txt)}
+.btn.sm{padding:5px 11px;font-size:12.5px;border-radius:7px}
+.btn.lg{padding:11px 26px;font-size:14.5px;border-radius:11px}
+.icon-btn{border:none;background:transparent;cursor:pointer;font-size:14px;color:var(--muted);
+  padding:4px 8px;border-radius:6px;transition:.15s;font-family:inherit}
+.icon-btn:hover{background:#fdeaea;color:#d32f2f}
+
+/* ============ 表格 ============ */
+.table-wrap{overflow-x:auto}
+.tbl{width:100%;border-collapse:collapse;font-size:13.5px}
+.tbl th{text-align:left;padding:11px 14px;color:var(--muted);font-weight:600;font-size:12.5px;
+  background:#fafbfc;border-bottom:1px solid var(--line);white-space:nowrap}
+.tbl td{padding:11px 14px;border-bottom:1px solid #f2f5f7;vertical-align:middle}
+.tbl tbody tr:last-child td{border-bottom:none}
+.tbl tbody tr:hover td{background:#fafcfd}
+.tbl .ta-r{text-align:right}
+.tbl .amt{font-weight:600;color:var(--green)}
+.tbl .strong{font-weight:600}
+.empty-cell{text-align:center;color:var(--muted);padding:30px 0!important}
+.tag{display:inline-block;background:var(--green-soft);color:var(--green);
+  padding:2px 9px;border-radius:20px;font-size:12px;font-weight:500}
+.tag-mini{display:inline-block;background:#fff3e0;color:#e67e22;
+  padding:0 6px;border-radius:8px;font-size:10.5px;font-weight:600;vertical-align:1px}
+.mini-input{width:74px;padding:5px 6px;text-align:center;border-radius:7px;font-size:13px}
+.unit{color:var(--muted);font-size:12px}
+.own-price{color:#e67e22;font-weight:700}
+
+/* ============ 选项卡 ============ */
+.tabs{display:flex;gap:8px}
+.tab{border:1px solid var(--line);background:#fff;padding:10px 22px;border-radius:10px;
+  cursor:pointer;font-size:13.5px;font-weight:500;color:var(--muted);font-family:inherit;transition:.15s}
+.tab:hover{color:var(--txt)}
+.tab.active{background:var(--green);color:#fff;border-color:var(--green);font-weight:600;
+  box-shadow:0 2px 8px rgba(46,125,50,.22)}
+
+/* ============ 商品搜索 ============ */
+.search-area{padding:16px 18px}
+.search-wrap{position:relative}
+.search-ico{position:absolute;left:16px;top:50%;transform:translateY(-50%);
+  font-size:16px;opacity:.45;pointer-events:none;z-index:2}
+.search-big{width:100%;padding:13px 16px 13px 46px;font-size:15px;border-radius:12px;
+  background:#f7f9fa;border:1px solid var(--line)}
+.search-big:focus{background:#fff;border-color:var(--green-2)}
+.search-input{width:100%;padding:8px 11px 8px 34px;font-size:13px;border-radius:9px;background:#f7f9fa}
+.search-input .search-ico{font-size:13px;left:12px}
+.search-drop{position:absolute;top:calc(100% + 6px);left:0;right:0;background:#fff;
+  border:1px solid var(--line);border-radius:12px;box-shadow:0 14px 34px rgba(16,24,40,.16);
+  max-height:338px;overflow:auto;display:none;padding:6px;z-index:60}
+.search-drop.show{display:block}
+.drop-item{display:flex;align-items:center;gap:12px;padding:9px 12px;border-radius:9px;cursor:pointer}
+.drop-item:hover{background:var(--green-soft)}
+.di-main{flex:1;min-width:0}
+.di-name{font-weight:600;font-size:13.5px}
+.di-sub{font-size:11.5px;color:var(--muted);margin-top:1px}
+.di-price{font-weight:600;color:var(--green);font-size:13.5px;white-space:nowrap}
+.di-def{font-size:11px;color:var(--muted);text-decoration:line-through;margin-left:5px;font-weight:400}
+.di-add{width:24px;height:24px;border-radius:50%;background:var(--green-soft);color:var(--green);
+  display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;flex-shrink:0}
+.drop-empty{padding:18px;text-align:center;color:var(--muted);font-size:13px}
+
+/* ============ 订单底部 ============ */
+.cart-footer{display:flex;align-items:center;justify-content:flex-end;gap:26px;
+  padding:15px 18px;border-top:1px solid var(--line);flex-wrap:wrap;background:#fcfdfd}
+.cart-footer .field{flex-direction:row;align-items:center;gap:8px}
+.cart-footer .field input{width:110px}
+.totals{display:flex;gap:24px;align-items:baseline}
+.totals>div{display:flex;flex-direction:column;gap:2px;text-align:right}
+.totals span{font-size:12px;color:var(--muted)}
+.totals b{font-size:15px;font-weight:600}
+.totals .grand b{font-size:21px;color:var(--green)}
+
+/* ============ 统计卡 ============ */
+.stat-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;padding:18px}
+.stat-card{background:linear-gradient(135deg,#f7fbf7,#eef7ee);border:1px solid #e2efe2;
+  border-radius:12px;padding:15px 17px;display:flex;flex-direction:column;gap:6px}
+.stat-card .sc-label{font-size:12.5px;color:#5c7a5e}
+.stat-card b{font-size:23px;font-weight:700;color:var(--green);letter-spacing:-.5px}
+.stat-card i{font-style:normal;font-size:12px;color:var(--muted)}
+
+/* ============ 图表 ============ */
+.charts{display:grid;grid-template-columns:1fr 1fr;gap:18px;padding:0 18px 18px}
+.chart-box{padding:0 18px 18px}
+.chart-box h3{font-size:13.5px;font-weight:600;margin-bottom:12px;color:#41505f}
+.bar-row{display:flex;align-items:center;gap:10px;margin-bottom:9px}
+.bar-label{width:96px;font-size:12.5px;color:#4b5a68;text-align:right;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex-shrink:0}
+.bar-track{flex:1;height:16px;background:#f0f4f6;border-radius:8px;overflow:hidden}
+.bar-fill{height:100%;border-radius:8px;background:linear-gradient(90deg,#66bb6a,#2e7d32);transition:width .5s}
+.bar-val{width:88px;font-size:12.5px;font-weight:600;color:#41505f;flex-shrink:0}
+.empty{color:var(--muted);font-size:13px;padding:16px 0;text-align:center}
+.trend{display:flex;align-items:flex-end;gap:5px;height:150px;overflow-x:auto;padding-bottom:22px}
+.trend-col{flex:1;min-width:18px;display:flex;flex-direction:column;align-items:center;
+  justify-content:flex-end;height:100%;position:relative}
+.trend-bar{width:70%;background:linear-gradient(180deg,#81c784,#2e7d32);border-radius:4px 4px 0 0;
+  min-height:2px;transition:height .4s}
+.trend-x{position:absolute;bottom:-20px;font-size:10px;color:var(--muted);white-space:nowrap}
+
+/* ============ 弹窗 ============ */
+.overlay{position:fixed;inset:0;background:rgba(15,23,32,.45);backdrop-filter:blur(2px);
+  display:none;align-items:center;justify-content:center;z-index:100;padding:20px}
+.overlay.show{display:flex}
+.modal-box{background:#fff;border-radius:16px;padding:24px;width:min(660px,100%);
+  max-height:88vh;overflow:auto;box-shadow:0 24px 60px rgba(0,0,0,.25);animation:pop .18s ease}
+@keyframes pop{from{transform:scale(.96);opacity:0}to{transform:scale(1);opacity:1}}
+.modal-title{font-size:16px;font-weight:600;margin-bottom:16px}
+.modal-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:20px}
+
+/* ============ 类目 / 商品 ============ */
+.cat-layout{display:grid;grid-template-columns:250px 1fr;gap:18px;align-items:start}
+.cat-list{list-style:none;padding:8px;max-height:520px;overflow:auto}
+.cat-item{display:flex;align-items:center;gap:8px;padding:10px 11px;border-radius:9px;
+  cursor:pointer;font-size:13.5px;transition:.15s}
+.cat-item:hover{background:#f4f8f5}
+.cat-item.active{background:var(--green-soft);color:var(--green);font-weight:600}
+.cat-item .cname{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cat-item .cnt{font-size:11px;color:var(--muted);background:#eef2f4;padding:1px 7px;border-radius:10px}
+.cat-item.active .cnt{background:#d6ebd8;color:var(--green)}
+.cat-item .cops{display:flex;gap:1px}
+.cat-item .cops button{border:none;background:transparent;cursor:pointer;font-size:12px;
+  color:var(--muted);padding:2px 5px;border-radius:5px}
+.cat-item .cops button:hover{background:#e2ebe4;color:var(--green)}
+.cat-item .cops button.del:hover{background:#fdeaea;color:#d32f2f}
+
+/* ============ 商户选择（表格一行一户） ============ */
+.cust-picker-toolbar{display:flex;align-items:center;gap:10px;padding:14px 18px;flex-wrap:wrap;
+  border-bottom:1px solid var(--line)}
+.cust-picker-toolbar .search-wrap{flex:1;min-width:200px;max-width:340px}
+.pick-count{font-size:12.5px;color:var(--muted);margin-left:auto;white-space:nowrap}
+.cust-pick-tbl tbody tr.cust-row{cursor:pointer;transition:background .12s}
+.cust-pick-tbl tbody tr.cust-row:hover td{background:#f6faf6}
+.cust-pick-tbl tbody tr.cust-row.on td{background:var(--green-soft)}
+.cust-pick-tbl tbody tr.cust-row.on td.strong{color:var(--green)}
+.cust-pick-tbl .cb-cell{width:46px;text-align:center}
+.cust-pick-tbl input[type=checkbox]{accent-color:var(--green);width:15px;height:15px;cursor:pointer}
+.cust-pick-tbl .zero{color:var(--muted)}
+
+/* ============ 提示框 ============ */
+.hint-box{margin:0 18px 16px;padding:11px 15px;background:#f6fbf6;border:1px solid #dcefdc;
+  border-left:3px solid var(--green-2);border-radius:8px;font-size:12.5px;color:#4a6b4d;line-height:1.75}
+.hint-box b{color:var(--green)}
+
+/* ============ 价格设置 ============ */
+.price-tbl{width:100%;border-collapse:collapse;font-size:13px}
+.price-tbl th{position:sticky;top:0;background:#fafbfc;text-align:left;padding:9px 10px;
+  color:var(--muted);font-size:12.5px;border-bottom:1px solid var(--line);z-index:2}
+.price-tbl td{padding:7px 10px;border-bottom:1px solid #f4f6f8}
+.price-tbl input{width:88px;padding:5px 7px;text-align:center;font-size:13px}
+.price-wrap{max-height:52vh;overflow:auto;border:1px solid var(--line);border-radius:10px}
+
+/* ============ Toast ============ */
+#toast{position:fixed;left:50%;bottom:34px;transform:translateX(-50%) translateY(14px);
+  background:#1f2a37;color:#fff;padding:11px 22px;border-radius:10px;font-size:13.5px;
+  opacity:0;pointer-events:none;transition:.25s;z-index:2000;box-shadow:0 8px 24px rgba(0,0,0,.22)}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* ============ 设置页 ============ */
+.settings-form{display:grid;grid-template-columns:1fr 1fr;gap:14px;padding:18px}
+.settings-form .full{grid-column:1/-1}
+.data-actions{display:flex;gap:10px;flex-wrap:wrap;padding:18px}
+.data-info{padding:0 18px 18px;font-size:12.5px;color:var(--muted);line-height:1.9}
+
+@media(max-width:900px){
+  .app{flex-direction:column}
+  .sidebar{position:static;width:100%;flex-direction:row;align-items:center;
+    padding:10px 12px;gap:8px;overflow-x:auto}
+  .brand{padding:0 8px 0 0}
+  .brand h1{font-size:14px;white-space:nowrap}
+  .brand p{display:none}
+  nav{flex-direction:row;flex:1}
+  .nav-item{padding:8px 12px;white-space:nowrap;font-size:13px}
+  .sidebar-foot{display:none}
+  .main{margin-left:0}
+  .content{padding:16px}
+  .charts,.cat-layout,.form-grid,.settings-form{grid-template-columns:1fr}
+  .topbar{padding:0 16px}
+  .topbar .meta span:nth-child(1),
+  .topbar .meta span:nth-child(2){display:none}
+  .totals{gap:14px}
+}
+</style>
+</head>
+<body>
+
+<!-- ==================== 登录界面 ==================== -->
+<div class="login-screen" id="loginScreen">
+  <div class="login-card">
+    <div class="login-logo">🥬</div>
+    <h1>鲜蔬源</h1>
+    <p>蔬菜店铺销售管理系统</p>
+    <form id="loginForm" autocomplete="off">
+      <div class="login-field">
+        <label>账号</label>
+        <input id="loginUser" placeholder="请输入账号" autocomplete="username">
+      </div>
+      <div class="login-field">
+        <label>密码</label>
+        <input id="loginPass" type="password" placeholder="请输入密码" autocomplete="current-password">
+      </div>
+      <div class="login-error" id="loginError"></div>
+      <button type="submit" class="login-btn">登 录</button>
+    </form>
+    <div class="login-hint">
+      默认账号：<b>admin</b>　默认密码：<b>123456</b><br>
+      首次登录后可在「系统设置 → 账号安全」中修改密码
+    </div>
+  </div>
+</div>
+
+<!-- ==================== 主系统 ==================== -->
+<div class="app" id="mainApp" style="display:none">
+
+  <!-- 侧边栏 -->
+  <aside class="sidebar">
+    <div class="brand">
+      <span class="logo">🥬</span>
+      <div>
+        <h1>鲜蔬源</h1>
+        <p>蔬菜店铺销售管理系统</p>
+      </div>
+    </div>
+    <nav>
+      <a class="nav-item active" data-page="order"><span>🧾</span>订单开具</a>
+      <a class="nav-item" data-page="category"><span>🥕</span>品类管理</a>
+      <a class="nav-item" data-page="stats"><span>📊</span>销售统计</a>
+      <a class="nav-item" data-page="merchant"><span>🏪</span>商户管理</a>
+      <a class="nav-item" data-page="monthly"><span>📅</span>商户月报</a>
+      <a class="nav-item" data-page="settings"><span>⚙️</span>系统设置</a>
+    </nav>
+    <div class="sidebar-foot">v3.0 · 本地独立运行</div>
+  </aside>
+
+  <!-- 主区域 -->
+  <main class="main">
+    <header class="topbar">
+      <h2 id="pageTitle">订单开具</h2>
+      <div class="meta">
+        <span id="shopNameTop">鲜蔬源蔬菜店</span>
+        <span id="todayTop"></span>
+        <span class="user-badge">👤 <b id="curUser">admin</b></span>
+        <button class="btn sm btn-logout" id="logoutBtn">退出</button>
+      </div>
+    </header>
+
+    <div class="content">
+
+      <!-- ================= 订单开具 ================= -->
+      <section class="page active" id="page-order">
+        <div class="tabs">
+          <button class="tab active" data-otab="new">开具订单</button>
+          <button class="tab" data-otab="list">订单列表</button>
+        </div>
+
+        <div id="otab-new">
+          <div class="card">
+            <div class="card-hd">
+              <h2>开具订单</h2>
+              <span class="hint-mini">搜索商品名称或拼音首字母，点击结果即加入明细</span>
+            </div>
+
+            <div class="form-inline">
+              <div class="field">
+                <label>客户 / 销售商户</label>
+                <select id="orderCustomer"></select>
+              </div>
+              <div class="field">
+                <label>开单日期</label>
+                <input type="date" id="orderDate">
+              </div>
+              <div class="field">
+                <label>备注</label>
+                <input id="orderRemark" placeholder="选填，如：送货上门">
+              </div>
+            </div>
+
+            <div class="search-area order-search" style="border-bottom:1px solid var(--line)">
+              <div class="search-wrap">
+                <span class="search-ico">🔍</span>
+                <input id="prodSearch" class="search-big" autocomplete="off"
+                       placeholder="输入商品名称或拼音首字母，如：dbc / 大白菜">
+                <div class="search-drop" id="searchDrop"></div>
+              </div>
+            </div>
+
+            <div class="table-wrap">
+              <table class="tbl">
+                <thead>
+                  <tr>
+                    <th style="width:32%">商品</th>
+                    <th style="width:18%">单价（元）</th>
+                    <th style="width:16%">数量</th>
+                    <th style="width:18%">小计</th>
+                    <th style="width:8%"></th>
+                  </tr>
+                </thead>
+                <tbody id="cartBody"></tbody>
+              </table>
+            </div>
+
+            <div class="cart-footer">
+              <div class="field">
+                <label>优惠金额</label>
+                <input type="number" id="orderDiscount" value="0" min="0" step="0.01">
+              </div>
+              <div class="totals">
+                <div><span>合计</span><b id="sumSubtotal">¥0.00</b></div>
+                <div><span>优惠</span><b id="sumDiscount">-¥0.00</b></div>
+                <div class="grand"><span>应收</span><b id="sumTotal">¥0.00</b></div>
+              </div>
+              <button class="btn primary lg" id="saveOrder">开单</button>
+              <button class="btn ghost" id="clearCart">清空明细</button>
+            </div>
+          </div>
+        </div>
+
+        <div id="otab-list" style="display:none">
+          <div class="card">
+            <div class="card-hd">
+              <h2>订单列表</h2>
+              <div class="hd-actions">
+                <label class="inline-label">从 <input type="date" id="orderListFrom"></label>
+                <label class="inline-label">至 <input type="date" id="orderListTo"></label>
+                <select id="orderListCust"><option value="">全部客户</option></select>
+                <button class="btn primary" onclick="renderOrderList()">查询</button>
+                <button class="btn" onclick="resetOrderFilter()">重置</button>
+              </div>
+            </div>
+            <div class="table-wrap">
+              <table class="tbl">
+                <thead>
+                  <tr>
+                    <th>订单号</th><th>开单日期</th><th>客户</th><th>品项</th>
+                    <th>优惠</th><th>应收金额</th><th class="ta-r">操作</th>
+                  </tr>
+                </thead>
+                <tbody id="orderListBody"></tbody>
+              </table>
+            </div>
+            <div class="card-foot" style="border-top:1px solid var(--line)">
+              <span id="orderListInfo" style="margin-right:auto;font-size:12.5px;color:var(--muted)"></span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= 品类管理 ================= -->
+      <section class="page" id="page-category">
+        <div class="cat-layout">
+          <div class="card">
+            <div class="card-hd">
+              <h2>类目</h2>
+              <button class="btn sm primary" onclick="openCategoryModal(null)">+ 新增</button>
+            </div>
+            <ul class="cat-list" id="catList"></ul>
+          </div>
+          <div class="card">
+            <div class="card-hd">
+              <h2 id="prodPanelTitle">商品</h2>
+              <div class="hd-actions">
+                <input class="search" id="prodMgrSearch" placeholder="🔍 搜索商品">
+                <button class="btn primary" onclick="openProductModal(null)">+ 新增商品</button>
+              </div>
+            </div>
+            <div class="table-wrap">
+              <table class="tbl">
+                <thead>
+                  <tr>
+                    <th>商品名称</th><th>计量单位</th><th>默认单价</th>
+                    <th>备注</th><th class="ta-r">操作</th>
+                  </tr>
+                </thead>
+                <tbody id="prodMgrBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= 销售统计 ================= -->
+      <section class="page" id="page-stats">
+        <div class="card">
+          <div class="card-hd">
+            <h2>销售数据统计</h2>
+            <div class="hd-actions">
+              <label class="inline-label">从 <input type="date" id="statFrom"></label>
+              <label class="inline-label">至 <input type="date" id="statTo"></label>
+              <button class="btn" onclick="quickRange('7')">近7天</button>
+              <button class="btn" onclick="quickRange('30')">近30天</button>
+              <button class="btn" onclick="quickRange('month')">本月</button>
+              <button class="btn primary" onclick="renderStats()">查询</button>
+              <button class="btn" onclick="printStats()">🖨 打印统计</button>
+            </div>
+          </div>
+          <div class="stat-cards" id="statCards"></div>
+        </div>
+
+        <div class="card">
+          <div class="charts" style="padding-top:18px">
+            <div class="chart-box" style="padding-left:0">
+              <h3>商品销售额 TOP10</h3>
+              <div id="chartCat"></div>
+            </div>
+            <div class="chart-box" style="padding-right:0">
+              <h3>客户销售额 TOP10</h3>
+              <div id="chartCust"></div>
+            </div>
+          </div>
+          <div class="chart-box">
+            <h3>每日销售趋势</h3>
+            <div id="chartDay"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= 商户管理 ================= -->
+      <section class="page" id="page-merchant">
+        <div class="tabs">
+          <button class="tab active" data-tab="supplier">供应商</button>
+          <button class="tab" data-tab="customer">客户 / 销售商户</button>
+        </div>
+        <div class="card">
+          <div class="card-hd">
+            <h2 id="merchantTitle">供应商列表</h2>
+            <div class="hd-actions">
+              <input class="search" id="merchantSearch" placeholder="🔍 搜索名称 / 联系人">
+              <button class="btn primary" id="addMerchantBtn">+ 新增供应商</button>
+            </div>
+          </div>
+          <div class="hint-box" id="merchantHint">
+            <b>一户一价：</b>在「客户 / 销售商户」页签中，点击客户行的「专属价」按钮，
+            即可为该客户单独设置任意商品的成交价。开单时选中该客户，商品会自动带出专属价
+            （未设置的商品仍按默认价），并在明细中标注「专属价」，仍可手动改价。
+          </div>
+          <div class="table-wrap">
+            <table class="tbl">
+              <thead>
+                <tr>
+                  <th>名称</th><th>联系人</th><th>联系电话</th><th>地址</th>
+                  <th>类型 / 备注</th><th class="ta-r">操作</th>
+                </tr>
+              </thead>
+              <tbody id="merchantBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= 商户月报 ================= -->
+      <section class="page" id="page-monthly">
+        <div class="card">
+          <div class="card-hd">
+            <h2>商户月报</h2>
+            <div class="hd-actions">
+              <input type="month" id="reportMonth">
+              <button class="btn primary" onclick="renderMonthlyReport()">生成报表</button>
+              <button class="btn" onclick="printMonthlyReport()">🖨 打印报表</button>
+            </div>
+          </div>
+          <div class="cust-picker-toolbar">
+            <div class="search-wrap">
+              <span class="search-ico">🔍</span>
+              <input id="custPickSearch" class="search-input" autocomplete="off"
+                     placeholder="搜索商户名称 / 联系人">
+            </div>
+            <button class="btn sm" onclick="pickAllVisible()">全选当前</button>
+            <button class="btn sm" onclick="pickClear()">清空选择</button>
+            <span class="pick-count" id="pickCount"></span>
+          </div>
+          <div class="table-wrap">
+            <table class="tbl cust-pick-tbl">
+              <thead>
+                <tr>
+                  <th class="cb-cell">
+                    <input type="checkbox" id="pickAllHeader" title="全选 / 取消当前列表">
+                  </th>
+                  <th>商户名称</th>
+                  <th>联系人</th>
+                  <th>联系电话</th>
+                  <th>类型</th>
+                  <th class="ta-r">本月订单</th>
+                  <th class="ta-r">本月金额</th>
+                </tr>
+              </thead>
+              <tbody id="custPickBody"></tbody>
+            </table>
+          </div>
+          <div style="padding:14px 18px;font-size:12.5px;color:var(--muted);line-height:1.8;
+                      border-top:1px solid var(--line)">
+            未进行搜索时显示全部商户；输入关键字后仅显示匹配的商户。点击行或勾选框切换选中状态。
+            勾选需要汇总的商户后点击「生成报表」，点击「打印报表」输出纸质报表。
+          </div>
+        </div>
+        <div id="monthlyReport"></div>
+      </section>
+
+      <!-- ================= 系统设置 ================= -->
+      <section class="page" id="page-settings">
+        <div class="card">
+          <div class="card-hd"><h2>店铺信息</h2></div>
+          <div class="settings-form">
+            <div class="field"><label>店铺名称</label><input id="setShopName"></div>
+            <div class="field"><label>联系电话</label><input id="setPhone"></div>
+            <div class="field full"><label>店铺地址</label><input id="setAddress"></div>
+            <div class="field"><label>订单号前缀</label><input id="setPrefix" maxlength="4" placeholder="XS"></div>
+            <div class="field"><label>小票底部标语</label><input id="setReceiptNote"></div>
+          </div>
+          <div class="card-foot">
+            <button class="btn primary" onclick="saveSettings()">保存设置</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-hd"><h2>账号安全</h2></div>
+          <div class="settings-form">
+            <div class="field"><label>当前账号</label><input id="setAccount" disabled></div>
+            <div class="field"><label>原密码</label><input id="setOldPass" type="password" placeholder="请输入原密码"></div>
+            <div class="field"><label>新密码（至少 4 位）</label><input id="setNewPass" type="password" placeholder="请输入新密码"></div>
+            <div class="field"><label>确认新密码</label><input id="setNewPass2" type="password" placeholder="请再次输入新密码"></div>
+          </div>
+          <div class="card-foot">
+            <button class="btn primary" onclick="doChangePassword()">修改密码</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-hd"><h2>数据管理</h2></div>
+          <div class="data-actions">
+            <button class="btn danger" onclick="clearOrders()">清空订单数据</button>
+            <button class="btn danger" onclick="resetAll()">恢复初始演示数据</button>
+          </div>
+          <div class="data-info" id="dataInfo"></div>
+        </div>
+      </section>
+
+    </div>
+  </main>
+</div>
+
+<!-- 弹窗 -->
+<div class="overlay" id="overlay">
+  <div class="modal-box" id="modalBox"></div>
+</div>
+<div id="toast"></div>
+
+<script>
+/* =========================================================
+ *  蔬菜店铺销售管理系统 v3.0（独立运行 + 登录 + 本地存储）
+ * =======================================================*/
+const $  = s => document.querySelector(s);
+const $$ = s => [...document.querySelectorAll(s)];
+const LS_KEY    = 'VEG_SHOP_DB_V3';
+const LEGACY_KEY= 'VEG_SHOP_DB_V2';
+const AUTH_KEY  = 'VEG_SHOP_AUTH';
+
+let DB = null;
+let cart = [];
+let activeCatId = null;
+let merchantTab = 'supplier';
+let currentPage = 'order';
+let orderTab = 'new';
+let monthlySelected = [];
+let monthlyResult = null;
+let statsResult = null;
+
+/* ---------------- 工具 ---------------- */
+function uid(p){ return p + Date.now().toString(36).slice(-5) + Math.random().toString(36).slice(2,6); }
+function money(n){ return '¥' + (Number(n)||0).toFixed(2); }
+function num(n){ return Number(n)||0; }
+function todayStr(d){
+  d = d || new Date();
+  const p = n => String(n).padStart(2,'0');
+  return d.getFullYear() + '-' + p(d.getMonth()+1) + '-' + p(d.getDate());
+}
+function monthStr(d){
+  d = d || new Date();
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0');
+}
+function esc(s){
+  return String(s === undefined || s === null ? '' : s)
+    .replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+function toast(msg){
+  const t = $('#toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(t._timer);
+  t._timer = setTimeout(()=> t.classList.remove('show'), 2200);
+}
+function saveDB(){ localStorage.setItem(LS_KEY, JSON.stringify(DB)); }
+
+/* ---------------- 登录状态 ---------------- */
+function isLoggedIn(){ return localStorage.getItem(AUTH_KEY) === '1'; }
+function setLoggedIn(v){
+  if (v) localStorage.setItem(AUTH_KEY, '1');
+  else   localStorage.removeItem(AUTH_KEY);
+}
+function showLoginError(msg){ $('#loginError').textContent = msg; }
+
+/* =========================================================
+ *  拼音首字母
+ * =======================================================*/
+const PY = {
+  '大':'d','白':'b','菜':'c','小':'x','菠':'b','萝':'l','生':'s','芹':'q','韭':'j',
+  '土':'t','豆':'d','胡':'h','洋':'y','葱':'c','山':'s','药':'y','西':'x','红':'h',
+  '柿':'s','黄':'h','瓜':'g','青':'q','椒':'j','茄':'q','丝':'s','南':'n','冬':'d',
+  '香':'x','菇':'g','金':'j','针':'z','平':'p','木':'m','耳':'e','藕':'o','荠':'j',
+  '苔':'t','花':'h','椰':'y','莴':'w','笋':'s','芦':'l','竹':'z','茭':'j','芋':'y',
+  '薯':'s','苗':'m','芽':'y','椿':'c','茼':'t','蒿':'h','油':'y','麦':'m','甜':'t',
+  '玉':'y','米':'m','紫':'z','甘':'g','蓝':'l','苋':'x','球':'q','抱':'b','子':'z',
+  '芫':'y','荽':'s','薄':'b','荷':'h','蘑':'m','银':'y','杏':'x','鲍':'b','鱼':'y',
+  '蟹':'x','味':'w','海':'h','带':'d','莲':'l','菱':'l','角':'j','荸':'b','果':'g',
+  '实':'s','根':'g','茎':'j','叶':'y','类':'l','菌':'j','心':'x','芥':'j','兰':'l',
+  '鲜':'x','干':'g','腌':'y','泡':'p','酸':'s','辣':'l','脆':'c','嫩':'n','老':'l',
+  '新':'x','特':'t','优':'y','精':'j','品':'p','级':'j','有':'y','机':'j','无':'w',
+  '公':'g','害':'h','绿':'l','色':'s','天':'t','然':'r','野':'y','水':'s','培':'p',
+  '温':'w','室':'s','棚':'p','露':'l','地':'d','进':'j','口':'k','国':'g','产':'c',
+  '本':'b','外':'w','省':'s','市':'s','县':'x','丝':'s','片':'p','块':'k',
+  '丁':'d','条':'t','段':'d','整':'z','颗':'k','斤':'j','袋':'d','把':'b','箱':'x',
+  '盒':'h','份':'f','个':'g','只':'z','头':'t','尾':'w','肉':'r','骨':'g','皮':'p'
+};
+function productInitials(name){
+  let s = '';
+  for (const ch of String(name)){
+    if (/[a-zA-Z0-9]/.test(ch)) s += ch.toLowerCase();
+    else if (PY[ch]) s += PY[ch];
+  }
+  return s;
+}
+
+/* =========================================================
+ *  数据初始化
+ * =======================================================*/
+function seedDB(){
+  const catDefs = [
+    ['叶菜类', ['大白菜','小白菜','菠菜','生菜','芹菜','韭菜']],
+    ['根茎类', ['土豆','胡萝卜','洋葱','白萝卜','山药']],
+    ['茄果类', ['西红柿','黄瓜','青椒','茄子','丝瓜','南瓜','冬瓜']],
+    ['豆菌类', ['豆角','香菇','金针菇','平菇']]
+  ];
+  const priceMap = {
+    '大白菜':1.5,'小白菜':2,'菠菜':3.5,'生菜':3,'芹菜':2.6,'韭菜':3,
+    '土豆':2,'胡萝卜':2.2,'洋葱':1.8,'白萝卜':1.2,'山药':6.5,
+    '西红柿':3.8,'黄瓜':2.8,'青椒':4,'茄子':3.2,'丝瓜':3.4,'南瓜':2.4,'冬瓜':1.6,
+    '豆角':5,'香菇':7,'金针菇':5.5,'平菇':4.5
+  };
+
+  const categories = catDefs.map(([name]) => ({ id: uid('cg'), name, note: '' }));
+  const products = [];
+  catDefs.forEach(([cname, items], i) => {
+    items.forEach(pn => {
+      products.push({
+        id: uid('p'),
+        categoryId: categories[i].id,
+        name: pn,
+        unit: pn === '金针菇' ? '袋' : '斤',
+        price: priceMap[pn] || 2,
+        note: ''
+      });
+    });
+  });
+
+  const suppliers = [
+    {id:uid('s'), name:'城东农产品批发市场', contact:'王建国', phone:'13900001111', address:'城东区兴农路88号', note:'每日凌晨4点配送'},
+    {id:uid('s'), name:'绿源蔬菜种植基地', contact:'李秀兰', phone:'13800002222', address:'郊区绿源村', note:'有机蔬菜直供'},
+    {id:uid('s'), name:'本地农户合作社', contact:'赵大山', phone:'13700003333', address:'城南镇合兴村', note:'时令蔬菜'}
+  ];
+  const customers = [
+    {id:uid('m'), name:'阳光小区食堂', contact:'刘经理', phone:'13600004444', address:'阳光小区3号楼', type:'食堂', note:''},
+    {id:uid('m'), name:'老王家常菜', contact:'王老板', phone:'13500005555', address:'建设路12号', type:'餐饮', note:'每日配送'},
+    {id:uid('m'), name:'张记牛肉面', contact:'张老板', phone:'13400006666', address:'人民路45号', type:'餐饮', note:''},
+    {id:uid('m'), name:'川味小厨', contact:'陈师傅', phone:'13300007777', address:'解放路8号', type:'餐饮', note:'周末休息'},
+    {id:uid('m'), name:'零售顾客', contact:'—', phone:'—', address:'—', type:'零售', note:'散客'}
+  ];
+
+  const prices = [];
+  const pByName = n => products.find(p => p.name === n);
+  const setP = (cid, pname, price) => {
+    const p = pByName(pname);
+    if (p) prices.push({ customerId: cid, productId: p.id, price });
+  };
+  setP(customers[0].id, '大白菜', 1.2);
+  setP(customers[0].id, '土豆', 1.7);
+  setP(customers[0].id, '西红柿', 3.4);
+  setP(customers[0].id, '黄瓜', 2.5);
+  setP(customers[1].id, '西红柿', 3.6);
+  setP(customers[1].id, '豆角', 4.6);
+  setP(customers[1].id, '香菇', 6.5);
+  setP(customers[3].id, '青椒', 3.7);
+
+  /* 近 60 天演示订单 */
+  const orders = [];
+  const now = new Date();
+  for (let day = 59; day >= 0; day--){
+    const d = new Date(now); d.setDate(d.getDate() - day);
+    const ds = todayStr(d);
+    const cnt = 1 + Math.floor(Math.random() * 4);
+    for (let k = 0; k < cnt; k++){
+      const cust = customers[Math.floor(Math.random() * customers.length)];
+      const n = 1 + Math.floor(Math.random() * 4);
+      const items = [], used = new Set();
+      for (let j = 0; j < n; j++){
+        let p, guard = 0;
+        do { p = products[Math.floor(Math.random() * products.length)]; guard++; }
+        while (used.has(p.id) && guard < 30);
+        used.add(p.id);
+        const custom = prices.find(x => x.customerId === cust.id && x.productId === p.id);
+        const price = custom ? custom.price : p.price;
+        const qty = Math.round((1 + Math.random() * 18) * 10) / 10;
+        items.push({
+          productId: p.id, name: p.name, unit: p.unit,
+          price, qty, amount: Math.round(qty * price * 100) / 100
+        });
+      }
+      const subtotal = Math.round(items.reduce((s,i) => s + i.amount, 0) * 100) / 100;
+      const discount = Math.random() < 0.18 ? Math.round(subtotal * 0.05 * 100) / 100 : 0;
+      orders.push({
+        id: uid('o'),
+        no: 'XS' + ds.replace(/-/g,'') + String(k + 1).padStart(3,'0'),
+        date: ds,
+        customerId: cust.id,
+        customerName: cust.name,
+        items, subtotal, discount,
+        total: Math.round((subtotal - discount) * 100) / 100,
+        remark: '',
+        createdAt: d.getTime() + k * 60000
+      });
+    }
+  }
+  orders.sort((a,b)=> a.date.localeCompare(b.date));
+
+  return {
+    auth: { username: 'admin', password: '123456' },
+    categories, products, suppliers, customers, prices, orders,
+    settings: {
+      shopName: '鲜蔬源蔬菜店',
+      phone: '400-888-8888',
+      address: '幸福路 66 号蔬菜市场 A12 档',
+      orderPrefix: 'XS',
+      receiptNote: '感谢惠顾，欢迎再次光临！'
+    }
+  };
+}
+
+function initDB(){
+  /* 1) 尝试读取当前版本 */
+  try {
+    const raw = localStorage.getItem(LS_KEY);
+    if (raw){
+      const d = JSON.parse(raw);
+      if (d && Array.isArray(d.categories) && Array.isArray(d.products)){
+        d.prices = d.prices || [];
+        if (!d.auth) d.auth = { username: 'admin', password: '123456' };
+        DB = d;
+        return;
+      }
+    }
+  } catch(e){ /* ignore */ }
+
+  /* 2) 尝试从 v2 迁移 */
+  try {
+    const raw2 = localStorage.getItem(LEGACY_KEY);
+    if (raw2){
+      const d2 = JSON.parse(raw2);
+      if (d2 && Array.isArray(d2.categories) && Array.isArray(d2.products)){
+        d2.prices = d2.prices || [];
+        d2.auth = { username: 'admin', password: '123456' };
+        DB = d2;
+        saveDB();
+        return;
+      }
+    }
+  } catch(e){ /* ignore */ }
+
+  /* 3) 全新初始化 */
+  DB = seedDB();
+  saveDB();
+}
+
+/* ---------------- 基础查询 ---------------- */
+function catName(id){
+  const c = DB.categories.find(x => x.id === id);
+  return c ? c.name : '未分类';
+}
+function getPrice(customerId, productId, defaultPrice){
+  if (!customerId) return defaultPrice;
+  const rec = DB.prices.find(p => p.customerId === customerId && p.productId === productId);
+  return rec ? rec.price : defaultPrice;
+}
+function getCustomPrice(customerId, productId){
+  if (!customerId) return null;
+  return DB.prices.find(p => p.customerId === customerId && p.productId === productId) || null;
+}
+function setCustomPrice(customerId, productId, price){
+  const i = DB.prices.findIndex(p => p.customerId === customerId && p.productId === productId);
+  if (price === null || price === '' || isNaN(price)){
+    if (i >= 0) DB.prices.splice(i, 1);
+  } else if (i >= 0) {
+    DB.prices[i].price = price;
+  } else {
+    DB.prices.push({ customerId, productId, price });
+  }
+}
+
+/* =========================================================
+ *  登录 / 退出 / 主系统显示
+ * =======================================================*/
+function showMain(){
+  $('#loginScreen').style.display = 'none';
+  $('#mainApp').style.display = 'flex';
+
+  $('#shopNameTop').textContent = DB.settings.shopName || '蔬菜店';
+  $('#todayTop').textContent = todayStr() + ' ' +
+    ['周日','周一','周二','周三','周四','周五','周六'][new Date().getDay()];
+  $('#curUser').textContent = DB.auth.username || 'admin';
+
+  monthlySelected = DB.customers.map(c => c.id);
+
+  renderOrderPage();
+  renderCustPicker();
+}
+
+function showLogin(){
+  $('#mainApp').style.display = 'none';
+  $('#loginScreen').style.display = 'flex';
+  $('#loginUser').value = '';
+  $('#loginPass').value = '';
+  $('#loginError').textContent = '';
+  setTimeout(() => { try { $('#loginUser').focus(); } catch(e){} }, 120);
+}
+
+/* =========================================================
+ *  页面切换
+ * =======================================================*/
+const PAGE_TITLES = {
+  order: '订单开具', category: '品类管理', stats: '销售统计',
+  merchant: '商户管理', monthly: '商户月报', settings: '系统设置'
+};
+
+$$('.nav-item').forEach(el => {
+  el.addEventListener('click', () => {
+    $$('.nav-item').forEach(n => n.classList.remove('active'));
+    el.classList.add('active');
+    $$('.page').forEach(p => p.classList.remove('active'));
+    const page = el.dataset.page;
+    $('#page-' + page).classList.add('active');
+    $('#pageTitle').textContent = PAGE_TITLES[page];
+    currentPage = page;
+    renderPage(page);
+  });
+});
+
+function renderPage(p){
+  if (p === 'order')    renderOrderPage();
+  if (p === 'category') renderCategoryPage();
+  if (p === 'stats')    renderStats();
+  if (p === 'merchant') renderMerchants();
+  if (p === 'monthly')  renderMonthlyPage();
+  if (p === 'settings') renderSettings();
+}
+
+/* =========================================================
+ *  模块一：订单开具
+ * =======================================================*/
+$$('[data-otab]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    $$('[data-otab]').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    orderTab = btn.dataset.otab;
+    $('#otab-new').style.display  = orderTab === 'new'  ? 'block' : 'none';
+    $('#otab-list').style.display = orderTab === 'list' ? 'block' : 'none';
+    if (orderTab === 'list') renderOrderList();
+  });
+});
+
+function fillSelects(){
+  const sel = $('#orderCustomer');
+  const cur = sel.value;
+  sel.innerHTML = '<option value="">请选择客户</option>' +
+    DB.customers.map(c => `<option value="${c.id}">${esc(c.name)}</option>`).join('');
+  sel.value = (cur && DB.customers.some(c => c.id === cur)) ? cur
+            : (DB.customers[0] ? DB.customers[0].id : '');
+
+  const lc = $('#orderListCust');
+  const curlc = lc.value;
+  lc.innerHTML = '<option value="">全部客户</option>' +
+    DB.customers.map(c => `<option value="${c.id}">${esc(c.name)}</option>`).join('');
+  lc.value = curlc;
+}
+
+function renderOrderPage(){
+  fillSelects();
+  if (!$('#orderDate').value) $('#orderDate').value = todayStr();
+  renderCart();
+  renderOrderList();
+  closeSearchDrop();
+}
+
+/* ---------- 商品搜索 ---------- */
+function matchProducts(q){
+  if (!q) return DB.products.slice();
+  const ql = q.toLowerCase().replace(/\s+/g, '');
+  return DB.products.filter(p => {
+    if (p.name.toLowerCase().includes(ql)) return true;
+    if (productInitials(p.name).includes(ql)) return true;
+    if (catName(p.categoryId).toLowerCase().includes(ql)) return true;
+    return false;
+  });
+}
+
+function renderSearchDrop(){
+  const q = $('#prodSearch').value.trim();
+  const custId = $('#orderCustomer').value;
+  const list = matchProducts(q).slice(0, 30);
+  const drop = $('#searchDrop');
+
+  if (!list.length){
+    drop.innerHTML = '<div class="drop-empty">没有找到匹配的商品，可到「品类管理」中添加</div>';
+  } else {
+    drop.innerHTML = list.map(p => {
+      const custom = getCustomPrice(custId, p.id);
+      return `<div class="drop-item" data-pid="${p.id}">
+        <div class="di-main">
+          <div class="di-name">${esc(p.name)}</div>
+          <div class="di-sub">${esc(catName(p.categoryId))} · ${esc(p.unit)}</div>
+        </div>
+        <div class="di-price">${money(custom ? custom.price : p.price)}${
+          custom ? `<span class="di-def">${money(p.price)}</span>` : ''
+        }</div>
+        <span class="di-add">+</span>
+      </div>`;
+    }).join('');
+  }
+  drop.classList.add('show');
+}
+
+function closeSearchDrop(){ $('#searchDrop').classList.remove('show'); }
+
+function quickAdd(productId){
+  addToCart(productId);
+  $('#prodSearch').value = '';
+  $('#prodSearch').focus();
+  renderSearchDrop();
+}
+
+/* ---------- 购物车 ---------- */
+function addToCart(productId){
+  const p = DB.products.find(x => x.id === productId);
+  if (!p) return;
+  const custId = $('#orderCustomer').value;
+  const price = getPrice(custId, productId, p.price);
+  const isCustom = !!getCustomPrice(custId, productId);
+
+  const line = cart.find(l => l.productId === productId);
+  if (line){
+    line.qty = Math.round((line.qty + 1) * 100) / 100;
+  } else {
+    cart.push({
+      productId, name: p.name, unit: p.unit,
+      price, qty: 1, isCustom, priceEdited: false
+    });
+  }
+  renderCart();
+}
+
+function renderCart(){
+  const tb = $('#cartBody');
+  if (!cart.length){
+    tb.innerHTML = `<tr><td colspan="5" class="empty-cell">
+      订单还没有商品 —— 在上方搜索框输入名称或拼音首字母，点击结果即可加入
+    </td></tr>`;
+  } else {
+    tb.innerHTML = cart.map((l, i) => `
+      <tr data-i="${i}">
+        <td class="strong">${esc(l.name)}${l.isCustom ? ' <span class="tag-mini">专属价</span>' : ''}
+          <span class="unit"> / ${esc(l.unit)}</span></td>
+        <td><input class="mini-input price" type="number" min="0" step="0.01" value="${l.price}"></td>
+        <td><input class="mini-input qty" type="number" min="0" step="0.1" value="${l.qty}"></td>
+        <td class="line-total amt">${money(l.qty * l.price)}</td>
+        <td class="ta-r"><button class="icon-btn" data-del="${i}" title="移除">✕</button></td>
+      </tr>`).join('');
+  }
+  updateTotals();
+}
+
+function updateTotals(){
+  const subtotal = cart.reduce((s,l) => s + l.price * l.qty, 0);
+  const disc = Math.min(subtotal, Math.max(0, num($('#orderDiscount').value)));
+  $('#sumSubtotal').textContent = money(subtotal);
+  $('#sumDiscount').textContent = '-' + money(disc);
+  $('#sumTotal').textContent = money(subtotal - disc);
+}
+
+function onCustomerChange(){
+  const custId = $('#orderCustomer').value;
+  cart.forEach(l => {
+    if (l.priceEdited) return;
+    const p = DB.products.find(x => x.id === l.productId);
+    if (!p) return;
+    const custom = getCustomPrice(custId, l.productId);
+    l.price = custom ? custom.price : p.price;
+    l.isCustom = !!custom;
+  });
+  renderCart();
+  if ($('#searchDrop').classList.contains('show')) renderSearchDrop();
+}
+
+/* ---------- 开单 ---------- */
+function genOrderNo(date){
+  const d = date.replace(/-/g, '');
+  const prefix = DB.settings.orderPrefix || 'XS';
+  const same = DB.orders.filter(o => o.date === date).length + 1;
+  return prefix + d + String(same).padStart(3, '0');
+}
+
+function saveOrder(){
+  if (!cart.length) return toast('请先添加商品');
+  const custId = $('#orderCustomer').value;
+  if (!custId) return toast('请选择客户');
+  const cust = DB.customers.find(c => c.id === custId);
+  const date = $('#orderDate').value || todayStr();
+
+  const items = cart.map(l => ({
+    productId: l.productId, name: l.name, unit: l.unit,
+    price: l.price, qty: l.qty,
+    amount: Math.round(l.price * l.qty * 100) / 100
+  }));
+  const subtotal = Math.round(items.reduce((s,i) => s + i.amount, 0) * 100) / 100;
+  const discount = Math.min(subtotal, Math.max(0, num($('#orderDiscount').value)));
+  const total = Math.round((subtotal - discount) * 100) / 100;
+
+  const order = {
+    id: uid('o'),
+    no: genOrderNo(date),
+    date,
+    customerId: custId,
+    customerName: cust ? cust.name : '散客',
+    items, subtotal, discount, total,
+    remark: $('#orderRemark').value.trim(),
+    createdAt: Date.now()
+  };
+
+  DB.orders.push(order);
+  saveDB();
+
+  /* 开单成功后弹出打印销售单 */
+  printReceipt(order);
+
+  cart = [];
+  $('#orderDiscount').value = 0;
+  $('#orderRemark').value = '';
+  $('#prodSearch').value = '';
+  closeSearchDrop();
+  renderCart();
+  renderOrderList();
+  toast('开单成功：' + order.no);
+}
+
+/* ---------- 订单列表 ---------- */
+function resetOrderFilter(){
+  $('#orderListFrom').value = '';
+  $('#orderListTo').value = '';
+  $('#orderListCust').value = '';
+  renderOrderList();
+}
+
+function renderOrderList(){
+  const from = $('#orderListFrom').value;
+  const to   = $('#orderListTo').value;
+  const cust = $('#orderListCust').value;
+
+  let list = DB.orders.slice().sort((a,b) => b.createdAt - a.createdAt);
+  if (from) list = list.filter(o => o.date >= from);
+  if (to)   list = list.filter(o => o.date <= to);
+  if (cust) list = list.filter(o => o.customerId === cust);
+
+  const total = list.reduce((s,o) => s + o.total, 0);
+  $('#orderListInfo').textContent =
+    `共 ${list.length} 单，应收合计 ${money(total)}` +
+    (list.length > 150 ? '（仅显示最近 150 单）' : '');
+
+  const show = list.slice(0, 150);
+  const tb = $('#orderListBody');
+  if (!show.length){
+    tb.innerHTML = '<tr><td colspan="7" class="empty-cell">暂无订单</td></tr>';
+    return;
+  }
+  tb.innerHTML = show.map(o => `
+    <tr>
+      <td class="strong">${esc(o.no)}</td>
+      <td>${esc(o.date)}</td>
+      <td>${esc(o.customerName)}</td>
+      <td>${o.items.length} 项</td>
+      <td>${o.discount ? '-' + money(o.discount) : '—'}</td>
+      <td class="amt">${money(o.total)}</td>
+      <td class="ta-r">
+        <button class="btn sm" onclick="printOrder('${o.id}')">🖨 打印</button>
+        <button class="btn sm danger" onclick="deleteOrder('${o.id}')">删除</button>
+      </td>
+    </tr>`).join('');
+}
+
+function deleteOrder(id){
+  if (!confirm('确定删除该订单吗？删除后不可恢复。')) return;
+  DB.orders = DB.orders.filter(o => o.id !== id);
+  saveDB();
+  renderOrderList();
+  toast('订单已删除');
+}
+
+function printOrder(id){
+  const o = DB.orders.find(x => x.id === id);
+  if (o) printReceipt(o);
+}
+
+/* =========================================================
+ *  打印引擎
+ * =======================================================*/
+function printWindow(title, bodyHtml, extraCss){
+  const w = window.open('', '_blank', 'width=900,height=720');
+  if (!w){ toast('请允许浏览器弹出窗口以进行打印'); return null; }
+
+  const base = `
+    body{font-family:"Microsoft YaHei","PingFang SC",sans-serif;color:#111;padding:22px;font-size:13px;margin:0}
+    h1{font-size:19px;text-align:center;margin:0 0 4px}
+    .sub{text-align:center;color:#666;font-size:12px;margin-bottom:16px}
+    .card{border:1px solid #ccc;border-radius:8px;margin-bottom:14px;overflow:hidden}
+    .card-hd{padding:9px 14px;border-bottom:1px solid #ddd;background:#f5f5f5;font-weight:600;font-size:13px}
+    .stat-cards{display:flex;flex-wrap:wrap;gap:10px;padding:12px 14px}
+    .stat-card{border:1px solid #ddd;border-radius:8px;padding:9px 14px;min-width:132px}
+    .stat-card .sc-label{font-size:12px;color:#666}
+    .stat-card b{display:block;font-size:18px;margin:3px 0}
+    .stat-card i{font-style:normal;font-size:11px;color:#888}
+    .tbl{width:100%;border-collapse:collapse;font-size:12px}
+    .tbl th,.tbl td{border:1px solid #bbb;padding:5px 8px;text-align:left}
+    .tbl th{background:#f0f0f0}
+    .tbl .ta-r{text-align:right}
+    .tbl .amt{font-weight:600}
+    .table-wrap{padding:10px 14px;overflow:visible}
+    .empty-cell{text-align:center;color:#888;padding:16px}
+    @page{margin:14mm}
+  `;
+
+  w.document.write(`<!DOCTYPE html><html lang="zh-CN"><head><meta charset="utf-8">
+    <title>${esc(title)}</title><style>${base}${extraCss || ''}</style></head>
+    <body>${bodyHtml}
+    <p style="text-align:center;margin-top:22px;font-size:11px;color:#999">
+      打印时间：${new Date().toLocaleString('zh-CN')}</p>
+    </body></html>`);
+  w.document.close();
+  w.focus();
+  setTimeout(() => { try { w.print(); } catch(e){} }, 350);
+  return w;
+}
+
+function printReceipt(order){
+  const s = DB.settings;
+  const rows = order.items.map(it => `
+    <tr>
+      <td>${esc(it.name)}</td>
+      <td class="c">${it.qty}${esc(it.unit)}</td>
+      <td class="r">${it.price.toFixed(2)}</td>
+      <td class="r">${it.amount.toFixed(2)}</td>
+    </tr>`).join('');
+
+  const html = `
+    <h1>${esc(s.shopName)}</h1>
+    <div class="sub">销 售 单</div>
+    <div class="meta">
+      <span>单号：${esc(order.no)}</span>
+      <span>日期：${esc(order.date)}</span>
+      <span>客户：${esc(order.customerName)}</span>
+      ${order.remark ? `<span>备注：${esc(order.remark)}</span>` : ''}
+    </div>
+    <table class="rc">
+      <thead><tr><th>品名</th><th class="c">数量</th><th class="r">单价</th><th class="r">金额</th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
+    <div class="tot"><span>合　计</span><b>${money(order.subtotal)}</b></div>
+    ${order.discount ? `<div class="tot"><span>优　惠</span><b>-${money(order.discount)}</b></div>` : ''}
+    <div class="tot big"><span>应　收</span><b>${money(order.total)}</b></div>
+    <div class="note">${esc(s.receiptNote || '')}</div>
+    <div class="note">电话：${esc(s.phone || '')}　地址：${esc(s.address || '')}</div>`;
+
+  printWindow('销售单 ' + order.no, html, `
+    body{padding:26px}
+    h1{margin-bottom:2px}
+    .meta{display:flex;flex-wrap:wrap;gap:6px 22px;font-size:12.5px;
+      border-bottom:1px dashed #999;padding-bottom:10px;margin-bottom:12px}
+    table.rc{width:100%;border-collapse:collapse;font-size:13px;margin-bottom:8px}
+    table.rc th{border-bottom:1px solid #999;padding:7px 4px;text-align:left;color:#444;font-weight:600}
+    table.rc td{border-bottom:1px dotted #ccc;padding:7px 4px}
+    .c{text-align:center!important}
+    .r{text-align:right!important}
+    .tot{display:flex;justify-content:space-between;padding:6px 4px;font-size:13.5px}
+    .tot.big{font-size:17px;font-weight:700;border-top:2px solid #333;margin-top:6px;padding-top:10px}
+    .note{text-align:center;color:#666;font-size:12px;margin-top:10px}
+  `);
+}
+
+/* =========================================================
+ *  模块二：品类管理
+ * =======================================================*/
+function renderCategoryPage(){
+  renderCatList();
+  renderProdMgr();
+}
+
+function renderCatList(){
+  const ul = $('#catList');
+  let html = `<li class="cat-item ${activeCatId === null ? 'active' : ''}" data-cat="">
+      <span class="cname">全部商品</span>
+      <span class="cnt">${DB.products.length}</span>
+      <span class="cops"></span>
+    </li>`;
+
+  html += DB.categories.map(c => {
+    const n = DB.products.filter(p => p.categoryId === c.id).length;
+    return `<li class="cat-item ${activeCatId === c.id ? 'active' : ''}" data-cat="${c.id}">
+      <span class="cname" title="${esc(c.name)}">${esc(c.name)}</span>
+      <span class="cnt">${n}</span>
+      <span class="cops">
+        <button title="编辑类目" onclick="event.stopPropagation();openCategoryModal('${c.id}')">✎</button>
+        <button class="del" title="删除类目" onclick="event.stopPropagation();deleteCategory('${c.id}')">✕</button>
+      </span>
+    </li>`;
+  }).join('');
+
+  ul.innerHTML = html;
+}
+
+function renderProdMgr(){
+  const q = ($('#prodMgrSearch').value || '').trim();
+  const list = DB.products.filter(p =>
+    (!activeCatId || p.categoryId === activeCatId) &&
+    (!q || p.name.includes(q)));
+
+  $('#prodPanelTitle').textContent = activeCatId
+    ? '商品 · ' + catName(activeCatId)
+    : '商品 · 全部';
+
+  const tb = $('#prodMgrBody');
+  if (!list.length){
+    tb.innerHTML = '<tr><td colspan="5" class="empty-cell">该类目下暂无商品，点击右上角「+ 新增商品」添加</td></tr>';
+    return;
+  }
+  tb.innerHTML = list.map(p => `
+    <tr>
+      <td class="strong">${esc(p.name)}</td>
+      <td>${esc(p.unit)}</td>
+      <td class="amt">${money(p.price)}</td>
+      <td>${esc(p.note || '—')}</td>
+      <td class="ta-r">
+        <button class="btn sm" onclick="openProductModal('${p.id}')">编辑</button>
+        <button class="btn sm danger" onclick="deleteProduct('${p.id}')">删除</button>
+      </td>
+    </tr>`).join('');
+}
+
+function openCategoryModal(id){
+  const c = id ? DB.categories.find(x => x.id === id) : { name: '', note: '' };
+  $('#modalBox').innerHTML = `
+    <h3 class="modal-title">${id ? '编辑类目' : '新增类目'}</h3>
+    <div class="form-grid">
+      <div class="field full"><label>类目名称 *</label>
+        <input id="mCatName" value="${esc(c.name)}" placeholder="如：叶菜类 / 根茎类 / 菌菇类"></div>
+      <div class="field full"><label>备注</label>
+        <input id="mCatNote" value="${esc(c.note || '')}" placeholder="选填"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal()">取消</button>
+      <button class="btn primary" onclick="saveCategory(${id ? `'${id}'` : 'null'})">保存</button>
+    </div>`;
+  openModal();
+}
+
+function saveCategory(id){
+  const name = $('#mCatName').value.trim();
+  if (!name) return toast('请填写类目名称');
+  if (DB.categories.some(c => c.name === name && c.id !== id))
+    return toast('该类目已存在');
+
+  const data = { name, note: $('#mCatNote').value.trim() };
+  if (id){
+    Object.assign(DB.categories.find(x => x.id === id), data);
+  } else {
+    const c = Object.assign({ id: uid('cg') }, data);
+    DB.categories.push(c);
+    activeCatId = c.id;
+  }
+  saveDB();
+  closeModal();
+  renderCatList();
+  renderProdMgr();
+  fillSelects();
+  toast('保存成功');
+}
+
+function deleteCategory(id){
+  const n = DB.products.filter(p => p.categoryId === id).length;
+  if (n > 0){
+    return toast(`该类目下还有 ${n} 个商品，请先删除或移动商品`);
+  }
+  if (!confirm('确定删除该类目吗？')) return;
+  DB.categories = DB.categories.filter(c => c.id !== id);
+  if (activeCatId === id) activeCatId = null;
+  saveDB();
+  renderCatList();
+  renderProdMgr();
+  toast('已删除');
+}
+
+function openProductModal(id){
+  if (!DB.categories.length){
+    return toast('请先创建至少一个类目');
+  }
+  const p = id ? DB.products.find(x => x.id === id)
+               : { categoryId: activeCatId || DB.categories[0].id, name: '', unit: '斤', price: '', note: '' };
+
+  $('#modalBox').innerHTML = `
+    <h3 class="modal-title">${id ? '编辑商品' : '新增商品'}</h3>
+    <div class="form-grid">
+      <div class="field"><label>所属类目 *</label>
+        <select id="mProdCat">
+          ${DB.categories.map(c =>
+            `<option value="${c.id}" ${p.categoryId === c.id ? 'selected' : ''}>${esc(c.name)}</option>`).join('')}
+        </select></div>
+      <div class="field"><label>商品名称 *</label>
+        <input id="mProdName" value="${esc(p.name)}" placeholder="如：大白菜"></div>
+      <div class="field"><label>计量单位</label>
+        <input id="mProdUnit" value="${esc(p.unit)}" placeholder="斤 / 袋 / 把"></div>
+      <div class="field"><label>默认单价（元）</label>
+        <input id="mProdPrice" type="number" min="0" step="0.01" value="${p.price}"></div>
+      <div class="field full"><label>备注</label>
+        <input id="mProdNote" value="${esc(p.note || '')}" placeholder="选填"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal()">取消</button>
+      <button class="btn primary" onclick="saveProduct(${id ? `'${id}'` : 'null'})">保存</button>
+    </div>`;
+  openModal();
+}
+
+function saveProduct(id){
+  const name = $('#mProdName').value.trim();
+  if (!name) return toast('请填写商品名称');
+  const data = {
+    categoryId: $('#mProdCat').value,
+    name,
+    unit: $('#mProdUnit').value.trim() || '斤',
+    price: Math.max(0, num($('#mProdPrice').value)),
+    note: $('#mProdNote').value.trim()
+  };
+  if (id){
+    Object.assign(DB.products.find(x => x.id === id), data);
+  } else {
+    DB.products.push(Object.assign({ id: uid('p') }, data));
+  }
+  saveDB();
+  closeModal();
+  renderCatList();
+  renderProdMgr();
+  toast('保存成功');
+}
+
+function deleteProduct(id){
+  if (!confirm('确定删除该商品吗？历史订单不受影响，相关专属价将一并清除。')) return;
+  DB.products = DB.products.filter(p => p.id !== id);
+  DB.prices = DB.prices.filter(p => p.productId !== id);
+  saveDB();
+  renderCatList();
+  renderProdMgr();
+  toast('已删除');
+}
+
+/* =========================================================
+ *  模块三：销售统计
+ * =======================================================*/
+function quickRange(kind){
+  const now = new Date();
+  let from = todayStr(now), to = todayStr(now);
+  if (kind === 'month'){
+    from = todayStr(new Date(now.getFullYear(), now.getMonth(), 1));
+  } else if (kind === '7'){
+    const d = new Date(now); d.setDate(d.getDate() - 6); from = todayStr(d);
+  } else if (kind === '30'){
+    const d = new Date(now); d.setDate(d.getDate() - 29); from = todayStr(d);
+  }
+  $('#statFrom').value = from;
+  $('#statTo').value = to;
+  renderStats();
+}
+
+function renderStats(){
+  if (!$('#statFrom').value){
+    const now = new Date();
+    $('#statFrom').value = todayStr(new Date(now.getFullYear(), now.getMonth(), 1));
+    $('#statTo').value = todayStr(now);
+  }
+  const from = $('#statFrom').value || '1970-01-01';
+  const to   = $('#statTo').value   || '9999-12-31';
+  const orders = DB.orders.filter(o => o.date >= from && o.date <= to);
+
+  const totalAmount = orders.reduce((s,o) => s + o.total, 0);
+  const totalSub    = orders.reduce((s,o) => s + o.subtotal, 0);
+  const totalDisc   = orders.reduce((s,o) => s + o.discount, 0);
+  const totalQty    = orders.reduce((s,o) =>
+    s + o.items.reduce((a,i) => a + i.qty, 0), 0);
+  const avg = orders.length ? totalAmount / orders.length : 0;
+
+  $('#statCards').innerHTML = `
+    <div class="stat-card"><span class="sc-label">订单总数</span>
+      <b>${orders.length}</b><i>单</i></div>
+    <div class="stat-card"><span class="sc-label">销售实收</span>
+      <b>${money(totalAmount)}</b><i>含优惠 ${money(totalDisc)}</i></div>
+    <div class="stat-card"><span class="sc-label">商品件数</span>
+      <b>${totalQty.toFixed(1)}</b><i>斤 / 袋 / 把</i></div>
+    <div class="stat-card"><span class="sc-label">客单价</span>
+      <b>${money(avg)}</b><i>元 / 单</i></div>
+    <div class="stat-card"><span class="sc-label">销售原价</span>
+      <b>${money(totalSub)}</b><i>未扣优惠</i></div>`;
+
+  const prodMap = new Map();
+  orders.forEach(o => o.items.forEach(it => {
+    const e = prodMap.get(it.name) || { name: it.name, unit: it.unit, qty: 0, amount: 0 };
+    e.qty += it.qty; e.amount += it.amount;
+    prodMap.set(it.name, e);
+  }));
+  const prodArr = [...prodMap.values()].sort((a,b) => b.amount - a.amount);
+  renderBars($('#chartCat'), prodArr, 'amount');
+
+  const custMap = new Map();
+  orders.forEach(o => {
+    const e = custMap.get(o.customerName) || { name: o.customerName, amount: 0, count: 0 };
+    e.amount += o.total; e.count += 1;
+    custMap.set(o.customerName, e);
+  });
+  const custArr = [...custMap.values()].sort((a,b) => b.amount - a.amount);
+  renderBars($('#chartCust'), custArr, 'amount');
+
+  const dayMap = new Map();
+  orders.forEach(o => {
+    const e = dayMap.get(o.date) || { date: o.date, amount: 0 };
+    e.amount += o.total;
+    dayMap.set(o.date, e);
+  });
+  const dayArr = [...dayMap.values()].sort((a,b) => a.date.localeCompare(b.date));
+  renderTrend(dayArr);
+
+  statsResult = { from, to, orders, totalAmount, totalSub, totalDisc, totalQty, avg, prodArr, custArr, dayArr };
+}
+
+function renderBars(el, arr, key){
+  if (!arr.length){ el.innerHTML = '<div class="empty">所选区间暂无数据</div>'; return; }
+  const max = Math.max(...arr.map(a => a[key]), 1);
+  el.innerHTML = arr.slice(0, 10).map(a => `
+    <div class="bar-row">
+      <span class="bar-label" title="${esc(a.name)}">${esc(a.name)}</span>
+      <div class="bar-track">
+        <div class="bar-fill" style="width:${(a[key] / max * 100).toFixed(1)}%"></div>
+      </div>
+      <span class="bar-val">${money(a[key])}</span>
+    </div>`).join('');
+}
+
+function renderTrend(days){
+  const el = $('#chartDay');
+  if (!days.length){ el.innerHTML = '<div class="empty">所选区间暂无数据</div>'; return; }
+  const max = Math.max(...days.map(d => d.amount), 1);
+  el.innerHTML = `<div class="trend">${days.map(d => `
+    <div class="trend-col" title="${d.date}　${money(d.amount)}">
+      <div class="trend-bar" style="height:${Math.max(2, d.amount / max * 100).toFixed(1)}%"></div>
+      <span class="trend-x">${d.date.slice(5)}</span>
+    </div>`).join('')}</div>`;
+}
+
+function printStats(){
+  if (!statsResult) renderStats();
+  const s = statsResult;
+  if (!s) return;
+
+  const cards = `
+    <div class="stat-cards">
+      <div class="stat-card"><span class="sc-label">订单总数</span><b>${s.orders.length}</b><i>单</i></div>
+      <div class="stat-card"><span class="sc-label">销售实收</span><b>${money(s.totalAmount)}</b><i>含优惠 ${money(s.totalDisc)}</i></div>
+      <div class="stat-card"><span class="sc-label">商品件数</span><b>${s.totalQty.toFixed(1)}</b><i>斤 / 袋 / 把</i></div>
+      <div class="stat-card"><span class="sc-label">客单价</span><b>${money(s.avg)}</b><i>元 / 单</i></div>
+      <div class="stat-card"><span class="sc-label">销售原价</span><b>${money(s.totalSub)}</b><i>未扣优惠</i></div>
+    </div>`;
+
+  const prodRows = s.prodArr.map(p => `
+    <tr><td>${esc(p.name)}</td><td>${p.qty.toFixed(1)} ${esc(p.unit)}</td><td class="ta-r">${money(p.amount)}</td></tr>`).join('')
+    || '<tr><td colspan="3" class="empty-cell">无数据</td></tr>';
+
+  const custRows = s.custArr.map(c => `
+    <tr><td>${esc(c.name)}</td><td>${c.count}</td><td class="ta-r">${money(c.amount)}</td></tr>`).join('')
+    || '<tr><td colspan="3" class="empty-cell">无数据</td></tr>';
+
+  const dayRows = s.dayArr.map(d => `
+    <tr><td>${d.date}</td><td class="ta-r">${money(d.amount)}</td></tr>`).join('')
+    || '<tr><td colspan="2" class="empty-cell">无数据</td></tr>';
+
+  const html = `
+    <h1>${esc(DB.settings.shopName)} · 销售统计</h1>
+    <div class="sub">统计区间：${s.from} 至 ${s.to}</div>
+    ${cards}
+    <div class="card">
+      <div class="card-hd">商品销售汇总</div>
+      <div class="table-wrap">
+        <table class="tbl">
+          <thead><tr><th>商品</th><th>数量</th><th class="ta-r">金额</th></tr></thead>
+          <tbody>${prodRows}</tbody>
+        </table>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-hd">客户销售汇总</div>
+      <div class="table-wrap">
+        <table class="tbl">
+          <thead><tr><th>客户</th><th>订单数</th><th class="ta-r">金额</th></tr></thead>
+          <tbody>${custRows}</tbody>
+        </table>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-hd">每日销售汇总</div>
+      <div class="table-wrap">
+        <table class="tbl">
+          <thead><tr><th>日期</th><th class="ta-r">销售额</th></tr></thead>
+          <tbody>${dayRows}</tbody>
+        </table>
+      </div>
+    </div>`;
+
+  printWindow('销售统计报表', html);
+}
+
+/* =========================================================
+ *  模块四：商户管理 + 一户一价
+ * =======================================================*/
+$$('[data-tab]').forEach(t => {
+  t.addEventListener('click', () => {
+    $$('[data-tab]').forEach(x => x.classList.remove('active'));
+    t.classList.add('active');
+    merchantTab = t.dataset.tab;
+    renderMerchants();
+  });
+});
+
+function renderMerchants(){
+  const isSup = merchantTab === 'supplier';
+  const list = isSup ? DB.suppliers : DB.customers;
+  const q = ($('#merchantSearch').value || '').trim();
+  const filtered = list.filter(m =>
+    !q || m.name.includes(q) || (m.contact || '').includes(q));
+
+  $('#merchantTitle').textContent = isSup ? '供应商列表' : '客户 / 销售商户列表';
+  $('#addMerchantBtn').textContent = isSup ? '+ 新增供应商' : '+ 新增客户';
+  $('#merchantHint').style.display = isSup ? 'none' : '';
+
+  const tb = $('#merchantBody');
+  if (!filtered.length){
+    tb.innerHTML = '<tr><td colspan="6" class="empty-cell">暂无数据</td></tr>';
+    return;
+  }
+  tb.innerHTML = filtered.map(m => {
+    const priceCount = isSup ? 0
+      : DB.prices.filter(p => p.customerId === m.id).length;
+    return `<tr>
+      <td class="strong">${esc(m.name)}</td>
+      <td>${esc(m.contact || '—')}</td>
+      <td>${esc(m.phone || '—')}</td>
+      <td>${esc(m.address || '—')}</td>
+      <td>${isSup
+            ? esc(m.note || '—')
+            : `<span class="tag">${esc(m.type || '客户')}</span>` +
+              (priceCount ? ` <span class="tag-mini">${priceCount} 项专属价</span>` : '')}</td>
+      <td class="ta-r">
+        ${isSup ? '' : `<button class="btn sm" onclick="openPriceModal('${m.id}')">专属价</button>`}
+        <button class="btn sm" onclick="openMerchantModal('${m.id}')">编辑</button>
+        <button class="btn sm danger" onclick="deleteMerchant('${m.id}')">删除</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function openMerchantModal(id){
+  const isSup = merchantTab === 'supplier';
+  const list = isSup ? DB.suppliers : DB.customers;
+  const m = id ? list.find(x => x.id === id)
+               : { name:'', contact:'', phone:'', address:'', type:'餐饮', note:'' };
+  const title = (id ? '编辑' : '新增') + (isSup ? '供应商' : '客户');
+
+  $('#modalBox').innerHTML = `
+    <h3 class="modal-title">${title}</h3>
+    <div class="form-grid">
+      <div class="field"><label>名称 *</label>
+        <input id="mName" value="${esc(m.name)}" placeholder="${isSup ? '如：城东批发市场' : '如：老王家常菜'}"></div>
+      <div class="field"><label>联系人</label>
+        <input id="mContact" value="${esc(m.contact || '')}"></div>
+      <div class="field"><label>联系电话</label>
+        <input id="mPhone" value="${esc(m.phone || '')}"></div>
+      ${isSup
+        ? `<div class="field"><label>地址</label>
+             <input id="mAddress" value="${esc(m.address || '')}"></div>
+           <div class="field full"><label>备注</label>
+             <input id="mNote" value="${esc(m.note || '')}" placeholder="如：每日凌晨配送"></div>`
+        : `<div class="field"><label>客户类型</label>
+             <select id="mType">
+               ${['餐饮','食堂','超市','零售','其他'].map(t =>
+                 `<option ${m.type === t ? 'selected' : ''}>${t}</option>`).join('')}
+             </select></div>
+           <div class="field full"><label>地址</label>
+             <input id="mAddress" value="${esc(m.address || '')}"></div>
+           <div class="field full"><label>备注</label>
+             <input id="mNote" value="${esc(m.note || '')}"></div>`}
+    </div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal()">取消</button>
+      <button class="btn primary" onclick="saveMerchant(${id ? `'${id}'` : 'null'})">保存</button>
+    </div>`;
+  openModal();
+}
+
+function saveMerchant(id){
+  const isSup = merchantTab === 'supplier';
+  const name = $('#mName').value.trim();
+  if (!name) return toast('请填写名称');
+
+  const data = {
+    name,
+    contact: $('#mContact').value.trim(),
+    phone: $('#mPhone').value.trim(),
+    address: $('#mAddress') ? $('#mAddress').value.trim() : '',
+    note: $('#mNote') ? $('#mNote').value.trim() : ''
+  };
+  if (!isSup) data.type = $('#mType') ? $('#mType').value : '其他';
+
+  const list = isSup ? DB.suppliers : DB.customers;
+  if (id){
+    Object.assign(list.find(x => x.id === id), data);
+  } else {
+    const nm = Object.assign({ id: uid(isSup ? 's' : 'm') }, data);
+    list.push(nm);
+    if (!isSup) monthlySelected.push(nm.id);
+  }
+  saveDB();
+  closeModal();
+  renderMerchants();
+  fillSelects();
+  refreshMonthlySelection();
+  toast('保存成功');
+}
+
+function deleteMerchant(id){
+  const isSup = merchantTab === 'supplier';
+  if (!confirm('确定删除吗？')) return;
+  if (isSup){
+    DB.suppliers = DB.suppliers.filter(x => x.id !== id);
+  } else {
+    DB.customers = DB.customers.filter(x => x.id !== id);
+    DB.prices = DB.prices.filter(p => p.customerId !== id);
+    monthlySelected = monthlySelected.filter(x => x !== id);
+  }
+  saveDB();
+  renderMerchants();
+  fillSelects();
+  refreshMonthlySelection();
+  toast('已删除');
+}
+
+/* ---------- 一户一价 ---------- */
+function openPriceModal(customerId){
+  const cust = DB.customers.find(c => c.id === customerId);
+  if (!cust) return;
+
+  const rows = DB.products.map(p => {
+    const custom = getCustomPrice(customerId, p.id);
+    return `<tr>
+      <td class="strong">${esc(p.name)}</td>
+      <td>${esc(catName(p.categoryId))}</td>
+      <td>${esc(p.unit)}</td>
+      <td>${money(p.price)}</td>
+      <td><input class="price-inp" data-pid="${p.id}" type="number" min="0" step="0.01"
+           placeholder="默认" value="${custom ? custom.price : ''}"></td>
+    </tr>`;
+  }).join('');
+
+  $('#modalBox').innerHTML = `
+    <h3 class="modal-title">一户一价 · ${esc(cust.name)}</h3>
+    <div class="hint-box" style="margin:0 0 14px">
+      <b>填写说明：</b>在右侧输入框填写该客户的专属成交价；<b>留空表示使用商品默认价</b>。
+      开单选择该客户时，系统会自动带出专属价，明细中会标注「专属价」，仍可手动改价。
+    </div>
+    <div class="price-wrap">
+      <table class="price-tbl">
+        <thead>
+          <tr><th>商品</th><th>类目</th><th>单位</th><th>默认价</th><th>专属价（元）</th></tr>
+        </thead>
+        <tbody>${rows || '<tr><td colspan="5" class="empty-cell">暂无商品</td></tr>'}</tbody>
+      </table>
+    </div>
+    <div class="modal-actions">
+      <button class="btn" onclick="clearAllCustomPrices('${customerId}')">全部恢复默认</button>
+      <button class="btn" onclick="closeModal()">取消</button>
+      <button class="btn primary" onclick="savePriceModal('${customerId}')">保存专属价</button>
+    </div>`;
+  openModal();
+}
+
+function savePriceModal(customerId){
+  $$('#modalBox .price-inp').forEach(inp => {
+    const pid = inp.dataset.pid;
+    const v = inp.value.trim();
+    setCustomPrice(customerId, pid, v === '' ? null : Math.max(0, num(v)));
+  });
+  saveDB();
+  closeModal();
+  renderMerchants();
+  if (currentPage === 'order') onCustomerChange();
+  toast('专属价已保存');
+}
+
+function clearAllCustomPrices(customerId){
+  if (!confirm('确定将该客户的专属价全部恢复为默认价吗？')) return;
+  DB.prices = DB.prices.filter(p => p.customerId !== customerId);
+  saveDB();
+  closeModal();
+  renderMerchants();
+  if (currentPage === 'order') onCustomerChange();
+  toast('已全部恢复默认价');
+}
+
+/* =========================================================
+ *  模块五：商户月报
+ * =======================================================*/
+function refreshMonthlySelection(){
+  const ids = DB.customers.map(c => c.id);
+  if (!monthlySelected.length){
+    monthlySelected = ids.slice();
+    return;
+  }
+  monthlySelected = monthlySelected.filter(id => ids.includes(id));
+}
+
+function renderMonthlyPage(){
+  if (!$('#reportMonth').value) $('#reportMonth').value = monthStr();
+  refreshMonthlySelection();
+  renderCustPicker();
+}
+
+function filteredCustomers(){
+  const q = ($('#custPickSearch').value || '').trim();
+  return DB.customers.filter(c =>
+    !q || c.name.includes(q) || (c.contact || '').includes(q));
+}
+
+function renderCustPicker(){
+  const list = filteredCustomers();
+  const ym = $('#reportMonth').value || monthStr();
+  const tb = $('#custPickBody');
+
+  if (!list.length){
+    tb.innerHTML = '<tr><td colspan="7" class="empty-cell">没有找到匹配的商户</td></tr>';
+  } else {
+    tb.innerHTML = list.map(c => {
+      const on = monthlySelected.includes(c.id);
+      const os = DB.orders.filter(o => o.date.startsWith(ym) && o.customerId === c.id);
+      const amount = os.reduce((s,o) => s + o.total, 0);
+      return `<tr class="cust-row ${on ? 'on' : ''}" data-cid="${c.id}">
+        <td class="cb-cell"><input type="checkbox" class="pick-cust" value="${c.id}" ${on ? 'checked' : ''}></td>
+        <td class="strong">${esc(c.name)}</td>
+        <td>${esc(c.contact || '—')}</td>
+        <td>${esc(c.phone || '—')}</td>
+        <td><span class="tag">${esc(c.type || '客户')}</span></td>
+        <td class="ta-r ${os.length ? '' : 'zero'}">${os.length}</td>
+        <td class="ta-r ${amount ? 'amt' : 'zero'}">${money(amount)}</td>
+      </tr>`;
+    }).join('');
+  }
+
+  const header = $('#pickAllHeader');
+  if (header){
+    const allOn = list.length > 0 && list.every(c => monthlySelected.includes(c.id));
+    header.checked = allOn;
+    header.indeterminate = !allOn && list.some(c => monthlySelected.includes(c.id));
+  }
+
+  $('#pickCount').textContent = `已选 ${monthlySelected.length} / ${DB.customers.length} 家`;
+}
+
+function toggleCust(id){
+  if (monthlySelected.includes(id)) monthlySelected = monthlySelected.filter(x => x !== id);
+  else monthlySelected.push(id);
+  renderCustPicker();
+}
+
+function pickAllVisible(){
+  const visible = filteredCustomers();
+  visible.forEach(c => {
+    if (!monthlySelected.includes(c.id)) monthlySelected.push(c.id);
+  });
+  renderCustPicker();
+  toast(`已选中当前 ${visible.length} 家商户`);
+}
+
+function pickClear(){
+  monthlySelected = [];
+  renderCustPicker();
+  toast('已清空商户选择');
+}
+
+function getSelectedCustomers(){
+  refreshMonthlySelection();
+  return monthlySelected.slice();
+}
+
+function renderMonthlyReport(){
+  const ym = $('#reportMonth').value || monthStr();
+  const sel = getSelectedCustomers();
+  if (!sel.length) return toast('请至少选择一个商户');
+
+  const custs = DB.customers.filter(c => sel.includes(c.id));
+  const orders = DB.orders.filter(o => o.date.startsWith(ym) && sel.includes(o.customerId));
+
+  const totalAmount = orders.reduce((s,o) => s + o.total, 0);
+  const totalSub    = orders.reduce((s,o) => s + o.subtotal, 0);
+  const totalDisc   = orders.reduce((s,o) => s + o.discount, 0);
+  const totalQty    = orders.reduce((s,o) =>
+    s + o.items.reduce((a,i) => a + i.qty, 0), 0);
+  const avg = orders.length ? totalAmount / orders.length : 0;
+  const activeDays = new Set(orders.map(o => o.date)).size;
+
+  const byCust = custs.map(c => {
+    const os = orders.filter(o => o.customerId === c.id);
+    const amount = os.reduce((s,o) => s + o.total, 0);
+    const disc   = os.reduce((s,o) => s + o.discount, 0);
+    const qty    = os.reduce((s,o) => s + o.items.reduce((a,i) => a + i.qty, 0), 0);
+    return {
+      name: c.name, count: os.length, amount, disc, qty,
+      avg: os.length ? amount / os.length : 0
+    };
+  }).sort((a,b) => b.amount - a.amount);
+
+  const dayMap = new Map();
+  orders.forEach(o => {
+    const e = dayMap.get(o.date) || { count: 0, sub: 0, disc: 0, total: 0 };
+    e.count++; e.sub += o.subtotal; e.disc += o.discount; e.total += o.total;
+    dayMap.set(o.date, e);
+  });
+  const dayArr = [...dayMap.values()].sort((a,b) => a.date.localeCompare(b.date));
+
+  const prodMap = new Map();
+  orders.forEach(o => o.items.forEach(it => {
+    const e = prodMap.get(it.name) || { name: it.name, unit: it.unit, qty: 0, amount: 0 };
+    e.qty += it.qty; e.amount += it.amount;
+    prodMap.set(it.name, e);
+  }));
+  const prodArr = [...prodMap.values()].sort((a,b) => b.amount - a.amount);
+
+  const custNames = custs.map(c => c.name).join('、') || '无';
+
+  const cardsHtml = `
+    <div class="stat-cards">
+      <div class="stat-card"><span class="sc-label">统计商户</span>
+        <b>${custs.length}</b><i>家</i></div>
+      <div class="stat-card"><span class="sc-label">订单总数</span>
+        <b>${orders.length}</b><i>单 · 营业 ${activeDays} 天</i></div>
+      <div class="stat-card"><span class="sc-label">销售实收</span>
+        <b>${money(totalAmount)}</b><i>原价 ${money(totalSub)}</i></div>
+      <div class="stat-card"><span class="sc-label">优惠合计</span>
+        <b>${money(totalDisc)}</b><i>折扣让利</i></div>
+      <div class="stat-card"><span class="sc-label">商品件数</span>
+        <b>${totalQty.toFixed(1)}</b><i>斤 / 袋 / 把</i></div>
+      <div class="stat-card"><span class="sc-label">客单价</span>
+        <b>${money(avg)}</b><i>元 / 单</i></div>
+    </div>`;
+
+  const custRows = byCust.length ? byCust.map(c => `
+    <tr>
+      <td class="strong">${esc(c.name)}</td>
+      <td>${c.count}</td>
+      <td>${c.qty.toFixed(1)}</td>
+      <td>${money(c.disc)}</td>
+      <td>${money(c.avg)}</td>
+      <td class="amt">${money(c.amount)}</td>
+    </tr>`).join('')
+    : '<tr><td colspan="6" class="empty-cell">所选商户本月暂无销售</td></tr>';
+
+  const dayRows = dayArr.length ? dayArr.map(r => `
+    <tr>
+      <td>${r.date}</td><td>${r.count}</td>
+      <td>${money(r.sub)}</td><td>${money(r.disc)}</td>
+      <td class="amt">${money(r.total)}</td>
+    </tr>`).join('')
+    : '<tr><td colspan="5" class="empty-cell">暂无数据</td></tr>';
+
+  const prodRows = prodArr.length ? prodArr.map(p => `
+    <tr>
+      <td class="strong">${esc(p.name)}</td>
+      <td>${p.qty.toFixed(1)} ${esc(p.unit)}</td>
+      <td class="amt">${money(p.amount)}</td>
+    </tr>`).join('')
+    : '<tr><td colspan="3" class="empty-cell">暂无数据</td></tr>';
+
+  $('#monthlyReport').innerHTML = `
+    <div class="card">
+      <div class="card-hd"><h2>${ym} 商户月报 · 汇总概览</h2></div>
+      ${cardsHtml}
+      <div style="padding:0 18px 14px;font-size:12.5px;color:var(--muted)">
+        统计商户：${esc(custNames)}
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-hd"><h2>按商户汇总</h2></div>
+      <div class="table-wrap">
+        <table class="tbl">
+          <thead><tr>
+            <th>商户名称</th><th>订单数</th><th>商品件数</th>
+            <th>优惠</th><th>客单价</th><th>实收金额</th>
+          </tr></thead>
+          <tbody>${custRows}</tbody>
+        </table>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-hd"><h2>每日销售明细</h2></div>
+      <div class="table-wrap">
+        <table class="tbl">
+          <thead><tr>
+            <th>日期</th><th>订单数</th><th>销售原价</th><th>优惠</th><th>实收</th>
+          </tr></thead>
+          <tbody>${dayRows}</tbody>
+        </table>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-hd"><h2>商品销售明细</h2></div>
+      <div class="table-wrap">
+        <table class="tbl">
+          <thead><tr><th>商品</th><th>数量</th><th>金额</th></tr></thead>
+          <tbody>${prodRows}</tbody>
+        </table>
+      </div>
+    </div>`;
+
+  monthlyResult = {
+    ym, custNames, custCount: custs.length,
+    summary: { orders: orders.length, activeDays, totalAmount, totalSub, totalDisc, totalQty, avg },
+    byCust, dayArr, prodArr
+  };
+  toast('报表已生成');
+}
+
+function printMonthlyReport(){
+  if (!monthlyResult) renderMonthlyReport();
+  if (!monthlyResult) return;
+  const r = monthlyResult;
+  const s = r.summary;
+
+  const cards = `
+    <div class="stat-cards">
+      <div class="stat-card"><span class="sc-label">统计商户</span><b>${r.custCount}</b><i>家</i></div>
+      <div class="stat-card"><span class="sc-label">订单总数</span><b>${s.orders}</b><i>单 · 营业 ${s.activeDays} 天</i></div>
+      <div class="stat-card"><span class="sc-label">销售实收</span><b>${money(s.totalAmount)}</b><i>原价 ${money(s.totalSub)}</i></div>
+      <div class="stat-card"><span class="sc-label">优惠合计</span><b>${money(s.totalDisc)}</b><i>折扣让利</i></div>
+      <div class="stat-card"><span class="sc-label">商品件数</span><b>${s.totalQty.toFixed(1)}</b><i>斤 / 袋 / 把</i></div>
+      <div class="stat-card"><span class="sc-label">客单价</span><b>${money(s.avg)}</b><i>元 / 单</i></div>
+    </div>`;
+
+  const custRows = r.byCust.length ? r.byCust.map(c => `
+    <tr>
+      <td>${esc(c.name)}</td><td>${c.count}</td><td>${c.qty.toFixed(1)}</td>
+      <td>${money(c.disc)}</td><td>${money(c.avg)}</td><td class="ta-r">${money(c.amount)}</td>
+    </tr>`).join('')
+    : '<tr><td colspan="6" class="empty-cell">无数据</td></tr>';
+
+  const dayRows = r.dayArr.length ? r.dayArr.map(d => `
+    <tr><td>${d.date}</td><td>${d.count}</td><td>${money(d.sub)}</td>
+        <td>${money(d.disc)}</td><td class="ta-r">${money(d.total)}</td></tr>`).join('')
+    : '<tr><td colspan="5" class="empty-cell">无数据</td></tr>';
+
+  const prodRows = r.prodArr.length ? r.prodArr.map(p => `
+    <tr><td>${esc(p.name)}</td><td>${p.qty.toFixed(1)} ${esc(p.unit)}</td>
+        <td class="ta-r">${money(p.amount)}</td></tr>`).join('')
+    : '<tr><td colspan="3" class="empty-cell">无数据</td></tr>';
+
+  const html = `
+    <h1>${esc(DB.settings.shopName)} · 商户月报</h1>
+    <div class="sub">报表月份：${r.ym}　统计商户：${esc(r.custNames)}</div>
+    ${cards}
+    <div class="card">
+      <div class="card-hd">按商户汇总</div>
+      <div class="table-wrap">
+        <table class="tbl">
+          <thead><tr>
+            <th>商户名称</th><th>订单数</th><th>商品件数</th>
+            <th>优惠</th><th>客单价</th><th class="ta-r">实收金额</th>
+          </tr></thead>
+          <tbody>${custRows}</tbody>
+        </table>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-hd">每日销售明细</div>
+      <div class="table-wrap">
+        <table class="tbl">
+          <thead><tr>
+            <th>日期</th><th>订单数</th><th>销售原价</th><th>优惠</th><th class="ta-r">实收</th>
+          </tr></thead>
+          <tbody>${dayRows}</tbody>
+        </table>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-hd">商品销售明细</div>
+      <div class="table-wrap">
+        <table class="tbl">
+          <thead><tr><th>商品</th><th>数量</th><th class="ta-r">金额</th></tr></thead>
+          <tbody>${prodRows}</tbody>
+        </table>
+      </div>
+    </div>`;
+
+  printWindow('商户月报 ' + r.ym, html);
+}
+
+/* =========================================================
+ *  模块六：系统设置
+ * =======================================================*/
+function renderSettings(){
+  const s = DB.settings;
+  $('#setShopName').value = s.shopName || '';
+  $('#setPhone').value = s.phone || '';
+  $('#setAddress').value = s.address || '';
+  $('#setPrefix').value = s.orderPrefix || 'XS';
+  $('#setReceiptNote').value = s.receiptNote || '';
+
+  $('#setAccount').value = DB.auth.username;
+
+  const sum = DB.orders.reduce((a,o) => a + o.total, 0);
+  $('#dataInfo').innerHTML = `
+    当前数据量：类目 <b>${DB.categories.length}</b> 个 ·
+    商品 <b>${DB.products.length}</b> 项 ·
+    供应商 <b>${DB.suppliers.length}</b> 家 ·
+    客户 <b>${DB.customers.length}</b> 家 ·
+    专属价 <b>${DB.prices.length}</b> 条 ·
+    订单 <b>${DB.orders.length}</b> 单 ·
+    累计销售 <b>${money(sum)}</b><br>
+    系统数据保存在本浏览器本地存储（localStorage）中，关闭浏览器不会丢失。
+    <b>注意：</b>清理浏览器缓存 / 使用无痕模式 / 更换浏览器会导致数据丢失，
+    请在重要节点打印报表留档。`;
+}
+
+function saveSettings(){
+  DB.settings = {
+    shopName: $('#setShopName').value.trim() || '蔬菜店',
+    phone: $('#setPhone').value.trim(),
+    address: $('#setAddress').value.trim(),
+    orderPrefix: ($('#setPrefix').value.trim() || 'XS').toUpperCase(),
+    receiptNote: $('#setReceiptNote').value.trim()
+  };
+  saveDB();
+  $('#shopNameTop').textContent = DB.settings.shopName;
+  toast('设置已保存');
+}
+
+function doChangePassword(){
+  const oldP = $('#setOldPass').value;
+  const newP = $('#setNewPass').value;
+  const newP2= $('#setNewPass2').value;
+
+  if (!oldP || !newP || !newP2) return toast('请填写完整的密码信息');
+  if (oldP !== DB.auth.password) return toast('原密码不正确');
+  if (newP.length < 4) return toast('新密码至少 4 位');
+  if (newP !== newP2) return toast('两次输入的新密码不一致');
+
+  DB.auth.password = newP;
+  saveDB();
+
+  $('#setOldPass').value = '';
+  $('#setNewPass').value = '';
+  $('#setNewPass2').value = '';
+  toast('密码修改成功，下次登录请使用新密码');
+}
+
+function clearOrders(){
+  if (!confirm('确定清空全部订单数据吗？此操作不可恢复，建议先打印需要的报表。')) return;
+  DB.orders = [];
+  saveDB();
+  renderSettings();
+  renderOrderList();
+  toast('订单已清空');
+}
+
+function resetAll(){
+  if (!confirm('确定恢复初始演示数据吗？现有全部数据（含订单、商户、专属价、登录密码）将被覆盖！')) return;
+  DB = seedDB();
+  saveDB();
+  cart = [];
+  monthlyResult = null;
+  statsResult = null;
+  activeCatId = null;
+  monthlySelected = DB.customers.map(c => c.id);
+  renderPage(currentPage);
+  $('#shopNameTop').textContent = DB.settings.shopName;
+  $('#curUser').textContent = DB.auth.username;
+  toast('已恢复初始数据（密码已重置为 123456）');
+}
+
+/* =========================================================
+ *  弹窗控制
+ * =======================================================*/
+function openModal(){ $('#overlay').classList.add('show'); }
+function closeModal(){ $('#overlay').classList.remove('show'); $('#modalBox').innerHTML = ''; }
+$('#overlay').addEventListener('click', e => {
+  if (e.target.id === 'overlay') closeModal();
+});
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeModal();
+});
+
+/* =========================================================
+ *  事件绑定
+ * =======================================================*/
+function bindEvents(){
+  /* ---------- 登录 / 退出 ---------- */
+  $('#loginForm').addEventListener('submit', e => {
+    e.preventDefault();
+    const u = $('#loginUser').value.trim();
+    const p = $('#loginPass').value;
+    if (!u || !p){ showLoginError('请输入账号和密码'); return; }
+
+    if (u === DB.auth.username && p === DB.auth.password){
+      showLoginError('');
+      setLoggedIn(true);
+      showMain();
+      toast('欢迎回来，' + u);
+    } else {
+      showLoginError('账号或密码不正确，请重新输入');
+      $('#loginPass').value = '';
+      $('#loginPass').focus();
+    }
+  });
+
+  $('#logoutBtn').addEventListener('click', () => {
+    if (!confirm('确定退出登录吗？')) return;
+    setLoggedIn(false);
+    showLogin();
+  });
+
+  /* ---------- 订单页：搜索框 ---------- */
+  const searchInput = $('#prodSearch');
+  searchInput.addEventListener('input', renderSearchDrop);
+  searchInput.addEventListener('focus', renderSearchDrop);
+  searchInput.addEventListener('keydown', e => {
+    if (e.key === 'Enter'){
+      const first = $('#searchDrop .drop-item');
+      if (first){ e.preventDefault(); quickAdd(first.dataset.pid); }
+    } else if (e.key === 'Escape'){
+      closeSearchDrop();
+    }
+  });
+  $('#searchDrop').addEventListener('click', e => {
+    const item = e.target.closest('.drop-item');
+    if (item) quickAdd(item.dataset.pid);
+  });
+  document.addEventListener('click', e => {
+    if (!e.target.closest('.order-search')) closeSearchDrop();
+  });
+
+  /* ---------- 订单页：客户 / 明细 ---------- */
+  $('#orderCustomer').addEventListener('change', onCustomerChange);
+
+  $('#cartBody').addEventListener('input', e => {
+    const tr = e.target.closest('tr[data-i]');
+    if (!tr) return;
+    const i = +tr.dataset.i;
+    const line = cart[i];
+    if (!line) return;
+    if (e.target.classList.contains('qty')){
+      line.qty = Math.max(0, num(e.target.value));
+    }
+    if (e.target.classList.contains('price')){
+      line.price = Math.max(0, num(e.target.value));
+      line.priceEdited = true;
+    }
+    const cell = tr.querySelector('.line-total');
+    if (cell) cell.textContent = money(line.qty * line.price);
+    updateTotals();
+  });
+
+  $('#cartBody').addEventListener('click', e => {
+    const btn = e.target.closest('[data-del]');
+    if (!btn) return;
+    cart.splice(+btn.dataset.del, 1);
+    renderCart();
+  });
+
+  $('#orderDiscount').addEventListener('input', updateTotals);
+
+  $('#clearCart').addEventListener('click', () => {
+    if (!cart.length) return;
+    if (!confirm('确定清空当前订单明细吗？')) return;
+    cart = [];
+    renderCart();
+  });
+
+  $('#saveOrder').addEventListener('click', saveOrder);
+
+  /* ---------- 品类页 ---------- */
+  $('#catList').addEventListener('click', e => {
+    const li = e.target.closest('.cat-item');
+    if (!li) return;
+    activeCatId = li.dataset.cat || null;
+    renderCatList();
+    renderProdMgr();
+  });
+  $('#prodMgrSearch').addEventListener('input', renderProdMgr);
+
+  /* ---------- 商户页 ---------- */
+  $('#merchantSearch').addEventListener('input', renderMerchants);
+  $('#addMerchantBtn').addEventListener('click', () => openMerchantModal(null));
+
+  /* ---------- 月报：商户搜索 + 表格勾选 ---------- */
+  $('#custPickSearch').addEventListener('input', renderCustPicker);
+
+  $('#custPickBody').addEventListener('change', e => {
+    if (!e.target.classList.contains('pick-cust')) return;
+    const id = e.target.value;
+    if (e.target.checked){
+      if (!monthlySelected.includes(id)) monthlySelected.push(id);
+    } else {
+      monthlySelected = monthlySelected.filter(x => x !== id);
+    }
+    renderCustPicker();
+  });
+
+  $('#custPickBody').addEventListener('click', e => {
+    if (e.target.classList.contains('pick-cust')) return;
+    const tr = e.target.closest('tr.cust-row');
+    if (!tr) return;
+    toggleCust(tr.dataset.cid);
+  });
+
+  $('#pickAllHeader').addEventListener('change', e => {
+    const visible = filteredCustomers();
+    if (e.target.checked){
+      visible.forEach(c => {
+        if (!monthlySelected.includes(c.id)) monthlySelected.push(c.id);
+      });
+    } else {
+      const ids = visible.map(c => c.id);
+      monthlySelected = monthlySelected.filter(id => !ids.includes(id));
+    }
+    renderCustPicker();
+  });
+
+  /* ---------- 统计 ---------- */
+  $('#statFrom').addEventListener('change', renderStats);
+  $('#statTo').addEventListener('change', renderStats);
+
+  /* ---------- 月报月份变化 ---------- */
+  $('#reportMonth').addEventListener('change', () => {
+    monthlyResult = null;
+    renderCustPicker();
+  });
+}
+
+/* =========================================================
+ *  启动
+ * =======================================================*/
+(function init(){
+  initDB();
+  bindEvents();
+
+  if (isLoggedIn()){
+    showMain();
+  } else {
+    showLogin();
+  }
+})();
+</script>
+</body>
+</html>
